@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String           @id @default(cuid())
+  email          String           @unique
+  firstName      String
+  lastName       String
+  password       String
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  requests       ServiceRequest[] // Requests made by the user
+  servicePartner ServicePartner? // One-to-One relation with ServicePartner
+  address        Address[]
+}
+
+model ServicePartner {
+  id              String                  @id @default(cuid())
+  user            User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String                  @unique
+  experience      Int
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  bio             String?
+  isVerified      Boolean                 @default(false)
+  upi             String?
+  isAvailable     Boolean                 @default(true)
+  serviceAreas    String[]
+  idCard          String? // URL of the uploaded ID card
+  services        ServicePartnerService[]
+  serviceRequests ServiceRequest[]
+}
+
+model Service {
+  id            String                  @id @default(cuid())
+  name          String
+  description   String?
+  category      String
+  basePrice     Int
+  estimatedTime String?
+  imageUrl      String?
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  partners      ServicePartnerService[] // Service partners offering this service
+  requests      ServiceRequest[] // Requests for this service
+}
+
+model ServicePartnerService {
+  id               String         @id @default(cuid())
+  servicePartner   ServicePartner @relation(fields: [servicePartnerId], references: [id], onDelete: Cascade)
+  servicePartnerId String
+  service          Service        @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  serviceId        String
+  resumeLink       String
+  isApproved       Boolean        @default(false)
+  approvedAt       DateTime?
+  adminRemarks     String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+model ServiceRequest {
+  id               String          @id @default(cuid())
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId           String
+  service          Service         @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  serviceId        String
+  servicePartner   ServicePartner? @relation(fields: [servicePartnerId], references: [id], onDelete: Cascade) // Fixed Relation
+  servicePartnerId String?
+  status           String          @default("Pending")
+
+  preferredDate DateTime?
+  preferredTime String?
+
+  assignedAt         DateTime?
+  acceptedByProvider Boolean   @default(false)
+  acceptedAt         DateTime?
+  completedAt        DateTime?
+
+  paymentStatus String    @default("Pending")
+  paymentMethod String?
+  paymentAt     DateTime?
+
+  cancellationReason String?
+  cancelledAt        DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  street     String
+  city       String
+  state      String
+  postalCode String
+  country    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
