@@ -6,7 +6,6 @@ import { RegisterForm } from "@/src/components/auth/RegisterForm";
 import { VerifyForm } from "@/src/components/auth/VerifyForm";
 import {AuthLayout} from "@/src/components/auth/AuthLayout";
 import {toast} from "react-toastify";
-import {saveUserToDatabase} from "@/src/actions/user";
 
 const Signup = () => {
     const { isLoaded, signUp, setActive } = useSignUp();
@@ -73,14 +72,6 @@ const Signup = () => {
 
             // Set the active session
             await setActive({ session: completeSignUp.createdSessionId });
-            await saveUserToDatabase(
-                {
-                    email: completeSignUp.emailAddress,
-                    password: completeSignUp.id,
-                    firstname: completeSignUp.firstName,
-                    lastname: completeSignUp.lastName
-                }
-            )
             // Redirect to home page
             toast.success("Signup successful!");
             router.push("/");

@@ -8,16 +8,19 @@ datasource db {
 }
 
 model User {
-  id             String           @id @default(cuid())
-  email          String           @unique
-  firstName      String
-  lastName       String
-  password       String
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  requests       ServiceRequest[] // Requests made by the user
-  servicePartner ServicePartner? // One-to-One relation with ServicePartner
-  address        Address[]
+  id                String           @id
+  email             String           @unique
+  firstName         String
+  lastName          String
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  walletBalance     Int              @default(100) // Wallet balance in currency
+  referralCode      String           @unique @default(uuid()) // Unique referral code for each user
+  requests          ServiceRequest[]
+  servicePartner    ServicePartner?
+  address           Address[]
+  referralsSent     Referral[]       @relation("Referrer") // Users this user referred
+  referralsReceived Referral?        @relation("Referee") // Users who referred this user
 }
 
 model ServicePartner {
@@ -83,6 +86,10 @@ model ServiceRequest {
   acceptedAt         DateTime?
   completedAt        DateTime?
 
+  rating     Int? // Rating from 1 to 5
+  review     String? // Optional review text
+  reviewedAt DateTime?
+
   paymentStatus String    @default("Pending")
   paymentMethod String?
   paymentAt     DateTime?
@@ -105,4 +112,17 @@ model Address {
   country    String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+}
+
+model Referral {
+  id           String  @id @default(cuid())
+  referrerId   String
+  refereeId    String  @unique //  This ensures a user can only be referred once
+  rewardAmount Int     @default(50)
+  isCompleted  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  referrer User @relation("Referrer", fields: [referrerId], references: [id])
+  referee  User @relation("Referee", fields: [refereeId], references: [id])
 }

@@ -1,7 +1,6 @@
 "use server"
 import { db} from "@/src/lib/db";
-import  cloudinary  from "@/src/lib/cloudinary";
-
+import { uploadToMega } from "@/src/lib/mega";
 export async function getServices() {
     try {
         const services = await db.service.findMany();

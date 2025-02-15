@@ -4,8 +4,10 @@ import { Inter } from "next/font/google";
 import {ClerkProvider} from "@clerk/nextjs";
 import {ToastContainer} from "react-toastify";
 import ProgressProvider from "@/src/components/ProgressSidebar";
-import Navbar from "@/src/components/ui/Navbar";
+import {Navbar} from "@/src/components/navbar";
 import {CartProvider} from "@/src/context/CartContext";
+import {Footer} from "@/src/components/other/footer";
+import Providers from "../components/other/queryprovider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,10 +21,13 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+
+
   return (
     <html lang="en">
       <body className={`${inter.className}`}>
         <ClerkProvider>
+          <Providers>
           <ToastContainer
               position="top-right"
               autoClose={3000} // 3 seconds
@@ -40,8 +45,10 @@ export default function RootLayout({
             <div className="flex-1">
               <Navbar />
               {children}
+              <Footer/>
             </div>
           </CartProvider>
+          </Providers>
         </ClerkProvider>
       </body>
     </html>

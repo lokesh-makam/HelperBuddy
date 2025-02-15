@@ -41,9 +41,9 @@ const ServicesPage = () => {
         selectedRating === "All Ratings" || service.rating >= parseFloat(selectedRating);
     const matchesPrice =
         selectedPrice === "All Prices" ||
-        (selectedPrice === "Under ₹50" && service.basePrice < 50) ||
-        (selectedPrice === "₹50 - ₹100" && service.basePrice >= 50 && service.basePrice <= 100) ||
-        (selectedPrice === "Above ₹100" && service.basePrice > 100);
+        (selectedPrice === "Under ₹50" ) ||
+        (selectedPrice === "₹50 - ₹100" ) ||
+        (selectedPrice === "Above ₹100");
 
     return matchesCategory && matchesSearch && matchesRating && matchesPrice;
   });
