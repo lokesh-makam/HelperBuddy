@@ -117,7 +117,7 @@ const recentOrders: Order[] = [
   }
 ];
 
-export default function RecentOrders() {
+export default function RecentOrders({partnerdetails}:any) {
     const [searchTerm, setSearchTerm] = useState("");
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);

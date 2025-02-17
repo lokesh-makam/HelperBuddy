@@ -61,7 +61,7 @@ export async function isServicePartner(userId: string) {
         const servicePartner = await db.servicePartner.findUnique({
             where: { userId },
         });
-        if(!servicePartner) return {success: false, error: "Service partner not found." };
+
         return { success: true, data:servicePartner };
     } catch (error) {
         console.error("Error checking service partner status:", error);

@@ -7,18 +7,57 @@ import ServiceInvitations from "@/src/components/ServiceInvitations";
 import RecentOrder from "@/src/components/RecentOrder";
 import ReviewsPage from "@/src/components/Reviews";
 import ServiceDashboard from "@/src/components/ServiceDashboard";
+import {useUser} from "@clerk/nextjs";
+import {isServicePartner} from "@/src/actions/provider";
+import { toast } from "react-toastify";
+import {useRouter} from "next/navigation";
+import Loading from "@/src/app/loading";
 
 export default function Layout() {
     // Add client-side only state initialization
     const [isClient, setIsClient] = useState(false);
     const [isOpen, setIsOpen] = useState(true);
     const [selectedSection, setSelectedSection] = useState("dashboard");
-
+    const {user}=useUser();
+    const [loading, setLoading] = useState(true);
+    const router = useRouter();
+    const [partner, setPartner] = useState<any>(null);
     // Use useEffect to handle client-side initialization
     useEffect(() => {
         setIsClient(true);
     }, []);
-
+    useEffect(() => {
+        const servicepartner=async()=>{
+            if(user){
+                const res=await isServicePartner(user.id);
+                console.log(res);
+                if(res.success){
+                  if(res?.data?.status==="pending"){
+                    toast.error("Please wait for admin approval!");
+                    setLoading(false);
+                    router.push('/provider');
+                  }
+                  if(res?.data?.status==="rejected"){
+                    toast.error("Your documents are rejected by admin! Please Register as service partner again!");
+                    setLoading(false);
+                    router.push('/provider');
+                  }
+                  if(res?.data?.status==="approved"){
+                    setPartner(res?.data);
+                    setLoading(false);
+                  }
+                }else{
+                    toast.error("Register first as service partner!");
+                    setLoading(false);
+                    router.push('/provider');
+                }
+            }
+        }
+        servicepartner();
+    }, [user]);
+    if(loading){
+        return <Loading/>;
+    }
     // If not client-side yet, return a simple loading state or null
     if (!isClient) {
         return (
@@ -83,11 +122,11 @@ export default function Layout() {
                     {/* Main Content Area */}
                     <main className="flex-1 h-full overflow-y-auto">
                         <div className="p-3 md:p-3">
-                            {selectedSection === "dashboard" && <ClientOnlyDashboard />}
-                            {selectedSection === "invitation" && <ClientOnlyInvitation />}
-                            {selectedSection === "recent-order" && <ClientOnlyRecentOrders />}
-                            {selectedSection === "review" && <ClientOnlyReviews />}
-                            {selectedSection === "edit" && <ClientOnlyEditService />}
+                            {selectedSection === "dashboard" && <ClientOnlyDashboard partnerdetails={partner}/>}
+                            {selectedSection === "invitation" && <ClientOnlyInvitation partnerdetails={partner}/>}
+                            {selectedSection === "recent-order" && <ClientOnlyRecentOrders partnerdetails={partner} />}
+                            {selectedSection === "review" && <ClientOnlyReviews partnerdetails={partner}/>}
+                            {selectedSection === "edit" && <ClientOnlyEditService partnerdetails={partner}/>}
                         </div>
                     </main>
                 </div>
@@ -109,32 +148,32 @@ const NavItem = ({ icon: Icon, label, isOpen, onClick }) => (
 );
 
 // Client-only wrapper components
-const ClientOnlyDashboard = () => {
+const ClientOnlyDashboard = (props:any) => {
     const [mounted, setMounted] = useState(false);
     useEffect(() => setMounted(true), []);
     if (!mounted) return null;
-    return <ServiceDashboard />;
+    return <ServiceDashboard partnerdetails={props.partnerdetails}/>;
 };
 
-const ClientOnlyInvitation = () => {
+const ClientOnlyInvitation = (props:any) => {
     const [mounted, setMounted] = useState(false);
     useEffect(() => setMounted(true), []);
     if (!mounted) return null;
-    return <ServiceInvitations />;
+    return <ServiceInvitations partnerdetails={props.partnerdetails}/>;
 };
 
-const ClientOnlyRecentOrders = () => {
+const ClientOnlyRecentOrders = (props:any) => {
     const [mounted, setMounted] = useState(false);
     useEffect(() => setMounted(true), []);
     if (!mounted) return null;
-    return <RecentOrder />;
+    return <RecentOrder partnerdetails={props.partnerdetails}/>;
 };
 
-const ClientOnlyReviews = () => {
+const ClientOnlyReviews = (props:any) => {
     const [mounted, setMounted] = useState(false);
     useEffect(() => setMounted(true), []);
     if (!mounted) return null;
-    return <ReviewsPage />;
+    return <ReviewsPage partnerdetails={props.partnerdetails}/>;
 };
 
 const ClientOnlyEditService = () => {

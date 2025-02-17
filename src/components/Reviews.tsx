@@ -57,7 +57,7 @@ const mockReviews: Review[] = [
   // Add more mock reviews as needed
 ];
 
-export default function ReviewsPage() {
+export default function ReviewsPage({partnerdetails}:any) {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('date');
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);

@@ -11,7 +11,7 @@ import {
 } from '@/src/components/ui/dialog';
 import {Button}  from '@/src/components/ui/button';
 
-const ServiceDashboard = ({partnerdetails}:any) => {
+const ServiceDashboard = () => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
