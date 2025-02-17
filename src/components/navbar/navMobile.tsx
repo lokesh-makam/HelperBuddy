@@ -35,11 +35,10 @@ const links = [
 
 interface NavMobileProps {
     onClick: () => void;
-    open: boolean;
-    textColor: string; // Add textColor prop
+    open: boolean; // Add textColor prop
 }
 
-export function NavMobile({ onClick, open, textColor }: NavMobileProps) {
+export default function NavMobile({ onClick, open }: NavMobileProps) {
     return (
         <div
             className={cn(
@@ -52,7 +51,7 @@ export function NavMobile({ onClick, open, textColor }: NavMobileProps) {
                 <div className="flex flex-col gap-4">
                     {/* logo and close button */}
                     <div className="flex items-center justify-between">
-                        <Logo/>
+                        <Logo />
                         <button onClick={onClick} className="p-2">
                             <CloseIcon className="w-6" />
                         </button>
@@ -81,9 +80,7 @@ export function NavMobile({ onClick, open, textColor }: NavMobileProps) {
                                 <Link
                                     href={link.path}
                                     className={cn(
-                                        "block py-4 font-inter text-sm font-medium",
-                                        textColor // Apply textColor to links
-                                    )}
+                                        "block py-4 font-inter text -black text-sm font-medium")}
                                 >
                                     {link.name}
                                 </Link>

@@ -15,9 +15,14 @@ const MAX_FILE_SIZE_MB = 5; // 5MB max file size
 export default function ServicePartnerForm() {
     const router = useRouter();
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const { user} = useUser(); // Get user authentication status
+    const { user } = useUser(); // Get user authentication details
 
+    // Initialize form with user name and email from Clerk
     const [form, setForm] = useState({
+        fullName: "",
+        userId: "",
+        email: "",
+        phone: "",
         experience: "",
         bio: "",
         upi: "",
@@ -27,6 +32,17 @@ export default function ServicePartnerForm() {
     const [idCard, setIdCard] = useState<File | null>(null);
     const [preview, setPreview] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+
+    // Prefill user details once Clerk data is available
+    useEffect(() => {
+        if (user) {
+            setForm((prev) => ({
+                ...prev,
+                 fullName: user.fullName || "",
+                email: user.primaryEmailAddress?.emailAddress || "",
+            }));
+        }
+    }, [user]);
 
     useEffect(() => {
         return () => {
@@ -59,6 +75,10 @@ export default function ServicePartnerForm() {
 
     const resetForm = () => {
         setForm({
+            fullName: user?.firstName+ " " + user?.lastName || "",
+            userId: user?.id || "",
+            email: user?.primaryEmailAddress?.emailAddress || "",
+            phone: "",
             experience: "",
             bio: "",
             upi: "",
@@ -72,7 +92,6 @@ export default function ServicePartnerForm() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // **Check if user is logged in**
         if (!user) {
             toast.error("You must be logged in to register!");
             return;
@@ -115,83 +134,104 @@ export default function ServicePartnerForm() {
     };
 
     return (
-        <div className="max-w-lg mx-auto p-6 bg-white shadow-lg rounded-lg">
-            <h1 className="text-2xl font-bold mb-4">Register as a Service Partner</h1>
+        <div className="max-w-xl mx-auto mt-20 p-8 bg-white shadow-xl rounded-lg border border-gray-400">
+            <h1 className="text-3xl font-bold mb-6 text-gray-900">Register as a Service Partner</h1>
 
-            {/* Show login warning if user is not logged in */}
             {!user && (
-                <p className="mb-4 text-red-600 font-semibold">
-                    ⚠ You must be logged in to register.
-                </p>
+                <div className="mb-6 p-4 bg-gray-50 border-l-4 border-gray-900 rounded">
+                    <p className="text-gray-700 font-semibold">
+                        ⚠ You must be logged in to register.
+                    </p>
+                </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Name (Disabled) */}
+                <div className="space-y-2">
+                    <Label htmlFor="name" className="text-sm font-semibold text-gray-700">
+                        Full Name
+                    </Label>
+                    <Input
+                        id="fullName"
+                        name="fullName"
+                        value={form.fullName}
+                        disabled
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                </div>
+
+                {/* Email (Disabled) */}
+                <div className="space-y-2">
+                    <Label htmlFor="email" className="text-sm font-semibold text-gray-700">
+                        Email Address
+                    </Label>
+                    <Input
+                        id="email"
+                        name="email"
+                        value={form.email}
+                        disabled
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                </div>
+
+                {/* Other Editable Fields */}
                 {[
+                    { id: "phone", label: "Phone Number", type: "tel", required: true },
+                    {id:"address",label:"Address",type:"text",required:true},
                     { id: "serviceAreas", label: "Service Areas (comma-separated pincodes/cities)", type: "text", required: true },
                     { id: "experience", label: "Experience (years)", type: "number", required: true, min: "1" },
                     { id: "bio", label: "Bio", component: Textarea },
                     { id: "upi", label: "UPI ID", type: "text" },
                 ].map(({ id, label, component: Component = Input, ...rest }) => (
-                    <div key={id}>
-                        <Label htmlFor={id}>{label}</Label>
+                    <div key={id} className="space-y-2">
+                        <Label htmlFor={id} className="text-sm font-semibold text-gray-700">
+                            {label}
+                        </Label>
                         <Component
                             id={id}
                             name={id}
                             placeholder={label}
                             value={form[id as keyof typeof form]}
                             onChange={handleChange}
-                            disabled={loading || !user} // Disable input if user is not logged in
+                            disabled={loading || !user}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                             {...rest}
                         />
                     </div>
                 ))}
 
                 {/* File Upload */}
-                <div>
-                    <Label htmlFor="idCard">Upload ID Card (Image/PDF)</Label>
-                    <div className="relative">
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/*,application/pdf"
-                            onChange={handleFileChange}
-                            className="hidden"
-                            id="idCard"
-                            disabled={loading || !user} // Disable if user is not logged in
-                        />
-                        <label
-                            htmlFor="idCard"
-                            className={`cursor-pointer flex items-center justify-center w-full h-12 rounded-md transition ${
-                                user ? "bg-gray-200 text-gray-700 hover:bg-gray-300" : "bg-gray-400 text-gray-600 cursor-not-allowed"
-                            }`}
-                        >
-                            {idCard ? "Change File" : "Choose File"}
-                        </label>
-                    </div>
+                <div className="space-y-2">
+                    <Label htmlFor="idCard" className="text-sm font-semibold text-gray-700">
+                        Upload ID Card (Image)
+                    </Label>
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*,application/pdf"
+                        onChange={handleFileChange}
+                        className="hidden"
+                        id="idCard"
+                        disabled={loading || !user}
+                    />
+                    <label
+                        htmlFor="idCard"
+                        className="cursor-pointer flex items-center justify-center w-full h-12 bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 rounded-lg"
+                    >
+                        {idCard ? "Change File" : "Choose File"}
+                    </label>
                     {preview && (
                         <div className="mt-2">
-                            {idCard?.type.includes("pdf") ? (
-                                <iframe
-                                    src={preview}
-                                    title="PDF Preview"
-                                    className="w-full h-64 border rounded-lg"
-                                ></iframe>
-                            ) : (
-                                <img
-                                    src={preview}
-                                    alt="ID Card Preview"
-                                    className="w-full h-48 object-cover rounded-lg shadow-md"
-                                />
-                            )}
+                            <img src={preview} alt="Preview" className="max-w-full h-auto" />
                         </div>
                     )}
                 </div>
 
-                {/* Submit Button */}
                 <Button type="submit" disabled={loading || !user} className="w-full">
-                    {loading ? "Registering..." : "Register"}
+                    {loading ? "Processing..." : "Submit Registration"}
                 </Button>
             </form>
         </div>
     );
 }
+

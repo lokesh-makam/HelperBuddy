@@ -57,7 +57,7 @@ export const Stats = () => {
     return (
         <section
             ref={ref}
-            className="w-full py-12 md:py-16 bg-black text-white text-center px-4"
+            className="w-full py-12 md:py-16 bg-[rgb(6,8,20)] text-white text-center px-4"
         >
             <motion.h2
                 className="text-3xl md:text-4xl font-bold mb-6"

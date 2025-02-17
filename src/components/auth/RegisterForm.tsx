@@ -34,7 +34,7 @@ export const RegisterForm = ({ signUpWithEmail, signUpWithOAuth, clerkError }: S
         emailAddress: "",
         password: "",
     });
-
+    const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -57,6 +57,8 @@ export const RegisterForm = ({ signUpWithEmail, signUpWithOAuth, clerkError }: S
         }
     };
     const handleOAuthSignUp = async (provider: "oauth_google" | "oauth_apple") => {
+        setIsLoading(true);
+        setLoadingProvider(provider);
         try {
             setIsLoading(true);
             signUpWithOAuth(provider);
@@ -65,6 +67,7 @@ export const RegisterForm = ({ signUpWithEmail, signUpWithOAuth, clerkError }: S
             toast.error("An error occurred. Please try again.");
         }
         finally {
+            setTimeout(() => setLoadingProvider(null), 10000);
             setIsLoading(false);
         }
     }
@@ -146,18 +149,44 @@ export const RegisterForm = ({ signUpWithEmail, signUpWithOAuth, clerkError }: S
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                    <Button type="button"
-                        variant="outline" className="border-zinc-700 text-black hover:bg-zinc-800 hover:text-white"
-                            disabled={isLoading}
-                            onClick={() => handleOAuthSignUp("oauth_google")}
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="border-zinc-700 text-black hover:bg-zinc-800 hover:text-white"
+                        onClick={() => handleOAuthSignUp("oauth_google")}
+                        disabled={loadingProvider === "oauth_google"}
                     >
-                        <Image src="/images/google-icon-updated.svg" alt="Google Icon" width={20} height={20} className="mr-2"/>
-                        Google
+                        {loadingProvider === "oauth_google" ? (
+                            <>
+                                <span className="animate-spin border-2 border-gray-500 border-t-transparent rounded-full w-4 h-4 mr-2"></span>
+                                Signing Up...
+                            </>
+                        ) : (
+                            <>
+                                <Image src="/images/google-icon-updated.svg" alt="Google Icon" width={20} height={20} className="mr-2" />
+                                Google
+                            </>
+                        )}
                     </Button>
-                    <Button type="button" variant="outline" className="border-zinc-700 text-black hover:bg-zinc-800 hover:text-white" disabled={isLoading}
-                            onClick={() => handleOAuthSignUp("oauth_apple")}>
-                        <Image src="/images/apple-icon.svg" alt="Google Icon" width={20} height={20} className="mr-2"/>
-                        Apple
+
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="border-zinc-700 text-black hover:bg-zinc-800 hover:text-white"
+                        onClick={() => handleOAuthSignUp("oauth_apple")}
+                        disabled={loadingProvider === "oauth_apple"}
+                    >
+                        {loadingProvider === "oauth_apple" ? (
+                            <>
+                                <span className="animate-spin border-2 border-gray-500 border-t-transparent rounded-full w-4 h-4 mr-2"></span>
+                                Signing Up...
+                            </>
+                        ) : (
+                            <>
+                                <Image src="/images/apple-icon.svg" alt="Apple Icon" width={20} height={20} className="mr-2" />
+                                Apple
+                            </>
+                        )}
                     </Button>
                 </div>
             </form>

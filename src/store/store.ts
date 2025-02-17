@@ -1,7 +1,7 @@
-import { create, StateCreator } from "zustand";
-import { persist } from "zustand/middleware"; // Import persist middleware
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
-// ✅ Define Service Type
+// ✅ Define Service Interface
 interface Service {
     id: number;
     name: string;
@@ -13,70 +13,47 @@ interface Service {
     basePrice: number;
 }
 
-// ✅ Define Zustand Store Slices
+// ✅ **Service Slice**
 interface ServicesSlice {
     services: Service[];
     setServices: (services: Service[]) => void;
 }
 
+// ✅ **Cart Slice (Now includes `clearCart`)**
 interface CartSlice {
     cart: Service[];
     addToCart: (service: Service) => void;
     removeFromCart: (id: number) => void;
+    clearCart: () => void;  // ✅ Added `clearCart` inside CartSlice
 }
 
-interface SharedSlice {
-    clearCart: () => void;
-}
-
-// ✅ **Service Slice**
-const createServicesSlice: StateCreator<
-    ServicesSlice & CartSlice & SharedSlice,
-    [],
-    [],
-    ServicesSlice
-> = (set) => ({
+// ✅ **Service Slice Implementation**
+const createServicesSlice = (set: any) => ({
     services: [],
     setServices: (services: Service[]) => set({ services }),
 });
 
-// ✅ **Cart Slice with Persistence**
-// @ts-ignore
-const createCartSlice: StateCreator<
-    ServicesSlice & CartSlice & SharedSlice,
-    [],
-    [],
-    CartSlice
-> = persist(
+// ✅ **Cart Slice with Persistence & `clearCart`**
+const createCartSlice = persist<CartSlice>(
     (set) => ({
         cart: [],
         addToCart: (service: Service) =>
             set((state) => ({ cart: [...state.cart, service] })),
         removeFromCart: (id: number) =>
             set((state) => ({ cart: state.cart.filter((item) => item.id !== id) })),
+        clearCart: () => set(() => ({ cart: [] })),  // ✅ Integrated `clearCart`
     }),
     {
         name: "cart-storage", // Key for localStorage
         // @ts-ignore
-        getStorage: () => localStorage, // ✅ Corrected property name
+        getStorage: () => localStorage, // ✅ Ensures persistence
     }
 );
 
-// ✅ **Shared Slice**
-const createSharedSlice: StateCreator<
-    ServicesSlice & CartSlice & SharedSlice,
-    [],
-    [],
-    SharedSlice
-> = (set) => ({
-    clearCart: () => set(() => ({ cart: [] })), // Ensure `cart` is reset properly
-});
-
 // ✅ **Create Zustand Store**
-export const useBoundStore = create<ServicesSlice & CartSlice & SharedSlice>()(
-    (...a) => ({
-        ...createServicesSlice(...a),
-        ...createCartSlice(...a),
-        ...createSharedSlice(...a),
-    })
-);
+
+export const useBoundStore = create<ServicesSlice & CartSlice>()((...a) => ({
+    // @ts-ignore
+    ...createServicesSlice(...a),
+    ...createCartSlice(...a),
+}));

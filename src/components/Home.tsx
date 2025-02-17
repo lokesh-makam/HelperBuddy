@@ -3,29 +3,67 @@
 import { useCart } from "@/src/context/CartContext";
 import {MotionWrapper} from "@/src/components/other/MotionWrapper";
 import {SectionLayout} from "@/src/components/layout/sectionLayout";
-import {Button} from "@/src/components/ui/button";
 import {Text} from "@/src/components/other/text";
 import {Heading} from "@/src/components/other/head";
 import {Testimonials} from "@/src/components/other/testimonials";
 import {Stats} from "@/src/components/other/stats";
-import { FaPaintBrush, FaTools, FaCouch, FaWrench, FaPlug, FaPalette } from "react-icons/fa";
-import Link from "next/link";
-import { motion, useAnimation } from "framer-motion";
+import { useAnimation } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { useEffect } from "react";
-
+import FAQ from "@/src/components/other/FAQ";
+import ApplianceRepair from "@/src/components/other/OurServices";
 export default function Home() {
-    const { addToCart } = useCart();
-
-    const services = [
-        { id: "1", name: "Interior Design", price: 100, image: "https://picsum.photos/600/400?random=1", icon: <FaPaintBrush className="text-2xl text-blue-500" /> },
-        { id: "2", name: "Home Renovation", price: 250, image: "https://picsum.photos/600/400?random=2", icon: <FaTools className="text-2xl text-blue-500" /> },
-        { id: "3", name: "Custom Furniture", price: 150, image: "https://picsum.photos/600/400?random=3", icon: <FaCouch className="text-2xl text-blue-500" /> },
-        { id: "4", name: "Plumbing Services", price: 80, image: "https://picsum.photos/600/400?random=4", icon: <FaWrench className="text-2xl text-blue-500" /> },
-        { id: "5", name: "Electrical Repairs", price: 120, image: "https://picsum.photos/600/400?random=5", icon: <FaPlug className="text-2xl text-blue-500" /> },
-        { id: "6", name: "Painting & Wall Decor", price: 200, image: "https://picsum.photos/600/400?random=6", icon: <FaPalette className="text-2xl text-blue-500" /> },
+    const { addToCart } = useCart(); // Use the useCart hook
+    const spaData = [
+        {
+            title: "Stress Relief",
+            image: "https://via.placeholder.com/400x300?text=Stress+Relief",
+            link: "#stress-relief",
+        },
+        {
+            title: "Pain Relief",
+            image: "https://via.placeholder.com/400x300?text=Pain+Relief",
+            link: "#pain-relief",
+        },
+        {
+            title: "Natural Skincare",
+            image: "https://via.placeholder.com/400x300?text=Natural+Skincare",
+            link: "#natural-skincare",
+        },
     ];
+    const services = [
+        {
+            id: 1,
+            name: "AC Service and Repair",
+            image: "/images/mai.png",
+        },
+        {
+            id: 2,
+            name: "Washing Machine Repair",
+            image: "/images/mai.png",
+        },
+        {
+            id: 3,
+            name: "Water Purifier Repair",
+            image: "/images/mai.png",
+        },
+        {
+            id: 4,
+            name: "Refrigerator Repair",
+            image: "/images/mai.png",
+        },
+        {
+            id: 5,
+            name: "Microwave Repair",
+            image: "/images/mai.png",
+        },
+        {
+            id: 6,
+            name: "TV Repair",
+            image: "/images/mai.png",
+        },  ];
 
+    // Scroll animations for cards
     const controls = useAnimation();
     const [ref, inView] = useInView({ triggerOnce: true, threshold: 0.2 });
 
@@ -60,88 +98,35 @@ export default function Home() {
                     <Text className="mt-4 md:text-lg lg:text-xl text-white">
                         Expert Help, Right at Your Doorstep
                     </Text>
-                    <Button className="mt-6 px-8 md:px-12 py-3 text-base md:text-lg bg-black text-white rounded-md hover:bg-gray-800 transition duration-300 ease-in-out">
+                    <button
+                        className="mt-6 px-8 md:px-12 py-3 text-base md:text-lg bg-black text-white rounded-md hover:bg-gray-800 transition duration-300 ease-in-out"
+                    >
                         Book Now
-                    </Button>
+                    </button>
                 </div>
             </SectionLayout>
 
             {/* Stats Section */}
-            <section className="w-full overflow-hidden" id="stats">
+            <section className="w-full bg-[rgb(6,8,20)] overflow-hidden" id="stats">
                 <Stats />
             </section>
 
             {/* Services Section */}
             <section className="px-4 md:px-10 py-12 md:py-16 bg-gray-50" id="services">
-                <div className="max-w-7xl mx-auto">
-                    <h3 className="text-4xl font-bold text-gray-900 mb-10 text-center">
-                        Our Services
-                    </h3>
-                    <div ref={ref} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {services.map((service, index) => (
-                            <motion.div
-                                key={service.id}
-                                className="bg-white/20 backdrop-blur-lg rounded-lg shadow-lg overflow-hidden transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-2 border border-white/10"
-                                variants={cardVariants}
-                                initial="hidden"
-                                animate={controls}
-                                custom={index}
-                            >
-                                {/* Service Image */}
-                                <div className="h-48 overflow-hidden relative">
-                                    <img
-                                        src={service.image}
-                                        alt={service.name}
-                                        className="w-full h-full object-cover"
-                                    />
-                                    <div className="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
-                                </div>
-
-                                {/* Service Details */}
-                                <div className="p-6">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        {service.icon}
-                                        <h4 className="text-2xl font-semibold text-gray-900">
-                                            {service.name}
-                                        </h4>
-                                    </div>
-                                    <p className="text-gray-700 text-lg mb-4">
-                                        ₹{service.price}
-                                    </p>
-                                    <button
-                                        onClick={() => addToCart(service)} // Add to cart
-                                        className="w-full bg-black text-white px-6 py-3 rounded-md transition-all duration-300 ease-in-out hover:bg-gray-800 hover:scale-105"
-                                    >
-                                        Add to Cart
-                                    </button>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
-
-                    {/* View More Button */}
-                    <motion.div
-                        className="flex justify-center mt-12"
-                        variants={cardVariants}
-                        initial="hidden"
-                        animate={controls}
-                    >
-                        <Link
-                            href="/services" // Redirect to /services
-                            className="px-8 py-3 bg-blue-500 text-white rounded-md transition-all duration-300 ease-in-out hover:bg-blue-600 hover:scale-105 backdrop-blur-lg bg-white/20 border border-white/10"
-                        >
-                            View More
-                        </Link>
-                    </motion.div>
-                </div>
+                <ApplianceRepair/>
             </section>
 
             {/* Testimonials Section */}
-            <section className="px-4 md:px-10 py-12 md:py-16 overflow-hidden" id="about">
-                <div className="max-w-7xl mx-auto">
+            <section className="px-0 md:px-10 py-0 bg-[rgb(6,8,20)] text-white md:py-16 overflow-hidden" id="about">
+                <div className="max-w-7xl  text-white mx-auto">
                     <Testimonials />
                 </div>
             </section>
+
+            <section className="w-full overflow-hidden" id="stats">
+                <FAQ/>
+            </section>
+
         </MotionWrapper>
     );
 }

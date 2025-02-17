@@ -24,48 +24,36 @@ model User {
 }
 
 model ServicePartner {
-  id              String                  @id @default(cuid())
-  user            User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId          String                  @unique
+  id              String           @id @default(cuid())
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String           @unique
   experience      Int
-  createdAt       DateTime                @default(now())
-  updatedAt       DateTime                @updatedAt
+  fullName        String
+  email           String
+  phone           String
+  address         String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
   bio             String?
-  isVerified      Boolean                 @default(false)
+  status          String           @default("pending")
   upi             String?
-  isAvailable     Boolean                 @default(true)
   serviceAreas    String[]
   idCard          String? // URL of the uploaded ID card
-  services        ServicePartnerService[]
   serviceRequests ServiceRequest[]
 }
 
 model Service {
-  id            String                  @id @default(cuid())
+  id            String           @id @default(cuid())
   name          String
   description   String?
   category      String
   basePrice     Int
   estimatedTime String?
+  rating        Int?
   imageUrl      String?
-  createdAt     DateTime                @default(now())
-  updatedAt     DateTime                @updatedAt
-  partners      ServicePartnerService[] // Service partners offering this service
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
   requests      ServiceRequest[] // Requests for this service
-}
-
-model ServicePartnerService {
-  id               String         @id @default(cuid())
-  servicePartner   ServicePartner @relation(fields: [servicePartnerId], references: [id], onDelete: Cascade)
-  servicePartnerId String
-  service          Service        @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  serviceId        String
-  resumeLink       String
-  isApproved       Boolean        @default(false)
-  approvedAt       DateTime?
-  adminRemarks     String?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
 }
 
 model ServiceRequest {
@@ -78,10 +66,18 @@ model ServiceRequest {
   servicePartnerId String?
   status           String          @default("Pending")
 
+  firstName  String
+  lastName   String
+  email      String
+  phone      String
+  address    String
+  city       String
+  state      String
+  postalCode String
+
   preferredDate DateTime?
   preferredTime String?
 
-  assignedAt         DateTime?
   acceptedByProvider Boolean   @default(false)
   acceptedAt         DateTime?
   completedAt        DateTime?
@@ -105,9 +101,11 @@ model Address {
   id         String   @id @default(cuid())
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     String
+  houseNo    String
   street     String
   city       String
   state      String
+  default    Boolean  @default(false)
   postalCode String
   country    String
   createdAt  DateTime @default(now())
@@ -126,3 +124,14 @@ model Referral {
   referrer User @relation("Referrer", fields: [referrerId], references: [id])
   referee  User @relation("Referee", fields: [refereeId], references: [id])
 }
+
+// model Payment {
+//   id               String          @id @default(cuid())
+//   user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+//   userId           String
+//   serviceRequest   ServiceRequest  @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+//   serviceRequestId String
+//   amount           Int
+//   createdAt        DateTime        @default(now())
+//   updatedAt        DateTime        @updatedAt
+// }

@@ -13,6 +13,7 @@ const Signup = () => {
     const router = useRouter();
     const [verifying, setVerifying] = useState(false);
     const [code, setCode] = useState("");
+
     const signUpWithEmail = async ({
                                        emailAddress,
                                        password,

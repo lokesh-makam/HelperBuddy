@@ -28,7 +28,7 @@ export const SigninForm = ({ signInWithEmail, signInWithOAuth, clerkError }: Sig
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-
+  const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -48,14 +48,16 @@ export const SigninForm = ({ signInWithEmail, signInWithOAuth, clerkError }: Sig
     }
   };
   const handleOAuthSignIn = async (provider: "oauth_google" | "oauth_apple") => {
+    setIsLoading(true);
+    setLoadingProvider(provider);
     try {
-      setIsLoading(true);
       signInWithOAuth(provider);
     } catch (error) {
       console.error("OAuth sign-in error:", error);
       toast.error("An error occurred. Please try again.");
     }
     finally {
+      setTimeout(() => setLoadingProvider(null), 10000);
       setIsLoading(false);
     }
   }
@@ -80,6 +82,7 @@ export const SigninForm = ({ signInWithEmail, signInWithOAuth, clerkError }: Sig
               value={formData.email}
               onChange={handleChange}
               className="bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-400"
+              disabled={isLoading}
           />
 
           <div className="relative">
@@ -127,17 +130,44 @@ export const SigninForm = ({ signInWithEmail, signInWithOAuth, clerkError }: Sig
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Button type="button" variant="outline" className="border-zinc-700 text-black hover:bg-zinc-800 hover:text-white"
-                    onClick={() => handleOAuthSignIn("oauth_google")}
+            <Button
+                type="button"
+                variant="outline"
+                className="border-zinc-700 text-black hover:bg-zinc-800 hover:text-white"
+                onClick={() => handleOAuthSignIn("oauth_google")}
+                disabled={loadingProvider === "oauth_google"}
             >
-              <Image src="/images/google-icon-updated.svg" alt="Google Icon" width={20} height={20} className="mr-2"/>
-              Google
+              {loadingProvider === "oauth_google" ? (
+                  <>
+                    <span className="animate-spin border-2 border-gray-500 border-t-transparent rounded-full w-4 h-4 mr-2"></span>
+                    Signing in...
+                  </>
+              ) : (
+                  <>
+                    <Image src="/images/google-icon-updated.svg" alt="Google Icon" width={20} height={20} className="mr-2" />
+                    Google
+                  </>
+              )}
             </Button>
-            <Button type="button" variant="outline" className="border-zinc-700 text-black hover:bg-zinc-800 hover:text-white"
-                    onClick={() => handleOAuthSignIn("oauth_apple")}
+
+            <Button
+                type="button"
+                variant="outline"
+                className="border-zinc-700 text-black hover:bg-zinc-800 hover:text-white"
+                onClick={() => handleOAuthSignIn("oauth_apple")}
+                disabled={loadingProvider === "oauth_apple"}
             >
-              <Image src="/images/apple-icon.svg" alt="Apple Icon" width={20} height={20} className="mr-2"/>
-              Apple
+              {loadingProvider === "oauth_apple" ? (
+                  <>
+                    <span className="animate-spin border-2 border-gray-500 border-t-transparent rounded-full w-4 h-4 mr-2"></span>
+                    Signing in...
+                  </>
+              ) : (
+                  <>
+                    <Image src="/images/apple-icon.svg" alt="Apple Icon" width={20} height={20} className="mr-2" />
+                    Apple
+                  </>
+              )}
             </Button>
           </div>
         </form>

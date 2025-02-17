@@ -61,9 +61,6 @@ const Signin = () => {
             toast.error(err.errors?.[0]?.message || "An error occurred. Please try again.");
         }
     };
-
-
-
     return (
         <AuthLayout>
             <SigninForm signInWithEmail={signInWithEmail} signInWithOAuth={signInWithOAuth} clerkError={clerkError} />

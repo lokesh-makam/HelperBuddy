@@ -1,78 +1,161 @@
-"use client";
+'use client';
 
-import { motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { motion } from 'framer-motion';
+import { Star } from 'lucide-react';
+import { useState } from 'react';
 
-const reviews = [
-    { author: "Alice Johnson", text: "Absolutely amazing! Highly recommended.", rating: 5, image: "/profile-placeholder.png" },
-    { author: "Mark Smith", text: "Great experience, will definitely come back!", rating: 4, image: "/profile-placeholder.png" },
-    { author: "Emily Davis", text: "A must-visit! Everything was top-notch.", rating: 5, image: "/profile-placeholder.png" },
-    { author: "John Doe", text: "Incredible service and fantastic atmosphere.", rating: 5, image: "/profile-placeholder.png" },
-    { author: "Sophia Lee", text: "Loved every moment! 10/10.", rating: 4.5, image: "/profile-placeholder.png" },
+const testimonials = [
+    {
+        id: 1,
+        name: "Alex Morrison",
+        role: "Software Engineer",
+        image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d",
+        review: "Exceptional service quality. The attention to detail was impressive.",
+        rating: 5,
+        date: "2 days ago",
+        verified: true
+    },
+    {
+        id: 2,
+        name: "Sarah Chen",
+        role: "Product Designer",
+        image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2",
+        review: "Fast, efficient, and very professional. Exactly what I needed.",
+        rating: 5,
+        date: "1 week ago",
+        verified: true
+    },
+    {
+        id: 3,
+        name: "James Wilson",
+        role: "Business Owner",
+        image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d",
+        review: "The best service I've experienced in years. Highly recommended!",
+        rating: 4,
+        date: "3 days ago",
+        verified: true
+    },
+    {
+        id: 4,
+        name: "Emily Rodriguez",
+        role: "Marketing Director",
+        image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330",
+        review: "Outstanding work ethic and results. Will definitely use again.",
+        rating: 5,
+        date: "5 days ago",
+        verified: true
+    },
+    {
+        id: 5,
+        name: "David Kim",
+        role: "Tech Consultant",
+        image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e",
+        review: "Incredible attention to detail. They went above and beyond.",
+        rating: 5,
+        date: "1 week ago",
+        verified: true
+    },
+    {
+        id: 6,
+        name: "Lisa Thompson",
+        role: "Creative Director",
+        image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80",
+        review: "Phenomenal service. They exceeded all my expectations.",
+        rating: 5,
+        date: "4 days ago",
+        verified: true
+    }
 ];
 
 export const Testimonials = () => {
-    const [isMounted, setIsMounted] = useState(false);
-    const scrollerRef = useRef<HTMLUListElement>(null);
-
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
+    const [isHovered, setIsHovered] = useState(false);
 
     return (
-        <div className="relative w-full max-w-7xl mx-auto overflow-hidden bg-white py-10 px-4 md:px-8">
-            <h2 className="text-center text-2xl md:text-3xl font-bold text-gray-900 mb-6">
-                What Our Customers Say
-            </h2>
+        <div className="w-full  py-12">
+            <div className="max-w-7xl mx-auto px-4">
+                <h2 className="text-3xl font-bold text-white mb-8 text-center">
+                    What Our Clients Say
+                </h2>
 
-            <div className="relative w-full overflow-hidden">
-                <ul
-                    ref={scrollerRef}
-                    className={`flex flex-nowrap gap-4 whitespace-nowrap ${
-                        isMounted ? "animate-marquee" : "invisible"
-                    }`}
-                >
-                    {[...reviews, ...reviews].map((review, idx) => (
-                        <motion.li
-                            key={idx}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: (idx % reviews.length) * 0.2, type: "spring", damping: 10, stiffness: 100 }}
-                            className="relative w-[80%] sm:w-[60%] md:w-[45%] lg:w-[30%] flex-shrink-0 rounded-2xl bg-white p-6 shadow-xl border border-gray-300"
+                <div className="relative rounded-[10px] overflow-hidden">
+                    <div
+                        className="flex gap-6  rounded-[10px] overflow-hidden"
+                        onMouseEnter={() => setIsHovered(true)}
+                        onMouseLeave={() => setIsHovered(false)}
+                    >
+                        <div
+                            className={`flex gap-6 animate-scroll ${isHovered ? 'pause-animation' : ''}`}
                         >
-                            <div className="flex items-center gap-4">
-                                <img
-                                    src={review.image}
-                                    alt={review.author}
-                                    className="w-12 h-12 rounded-full border border-gray-300 object-cover"
-                                />
-                                <div>
-                                    <span className="text-lg font-bold text-gray-900">{review.author}</span>
-                                    <p className="text-yellow-500 text-sm">⭐ {review.rating}/5</p>
-                                </div>
-                            </div>
-                            <p className="mt-4 text-gray-700 text-sm md:text-base leading-relaxed">
-                                "{review.text}"
-                            </p>
-                        </motion.li>
-                    ))}
-                </ul>
+                            {[...testimonials, ...testimonials].map((testimonial, index) => (
+                                <motion.div
+                                    key={index}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                                    className="w-[300px] flex-shrink-0 rounded-xl  bg-white/10 p-6 border border-white/10 hover:border-white/30 transition-all duration-300"
+                                >
+                                    <div className="flex items-start gap-4">
+                                        <img
+                                            src={testimonial.image}
+                                            alt={testimonial.name}
+                                            className="w-12 h-12 rounded-full object-cover ring-2 ring-white/20"
+                                        />
+                                        <div>
+                                            <h3 className="text-white font-medium">{testimonial.name}</h3>
+                                            <p className="text-white/60 text-sm">{testimonial.role}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-1 mt-3">
+                                        {[...Array(5)].map((_, i) => (
+                                            <Star
+                                                key={i}
+                                                className={`w-4 h-4 ${
+                                                    i < testimonial.rating
+                                                        ? 'text-yellow-400 fill-yellow-400'
+                                                        : 'text-gray-600'
+                                                }`}
+                                            />
+                                        ))}
+                                    </div>
+
+                                    <p className="mt-4 text-white/80 text-sm line-clamp-3">
+                                        "{testimonial.review}"
+                                    </p>
+
+                                    <div className="mt-4 flex items-center justify-between">
+                                        <span className="text-white/40 text-xs">{testimonial.date}</span>
+                                        {testimonial.verified && (
+                                            <span className="text-xs text-emerald-400/80">Verified Customer</span>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Gradient Overlays */}
+                    <div className="absolute left-0 top-0 h-full w-20 bg-gradient-to-r from-[rgb(6,8,20)] to-transparent pointer-events-none"></div>
+                    <div className="absolute right-0 top-0 h-full w-20 bg-gradient-to-l from-[rgb(6,8,20)] to-transparent pointer-events-none"></div>
+                </div>
             </div>
 
-            {/* Gradient Fade Effect */}
-            <div className="absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-white to-transparent"></div>
-            <div className="absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-white to-transparent"></div>
-
-            <style jsx>{`
-        @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
+            <style jsx global>{`
+        @keyframes scroll {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
         }
 
-        .animate-marquee {
-          display: flex;
-          animation: marquee 20s linear infinite;
-          white-space: nowrap;
+        .animate-scroll {
+          animation: scroll 30s linear infinite;
+        }
+
+        .pause-animation {
+          animation-play-state: paused;
         }
       `}</style>
         </div>

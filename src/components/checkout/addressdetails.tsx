@@ -8,11 +8,11 @@ interface AddressDetailsProps {
         address: string;
         city: string;
         state: string;
-        pincode: string;
+        postalCode: string;
     };
 }
 
-export const AddressDetails: React.FC<AddressDetailsProps> = ({ onChange, values = { address: '', city: '', state: '', pincode: '' } }) => (
+export const AddressDetails: React.FC<AddressDetailsProps> = ({ onChange, values = { address: '', city: '', state: '', postalCode: '' } }) => (
     <div className="space-y-4">
         <div className="space-y-2">
             <Label htmlFor="address">Street Address</Label>
@@ -48,9 +48,9 @@ export const AddressDetails: React.FC<AddressDetailsProps> = ({ onChange, values
             <div className="space-y-2">
                 <Label htmlFor="pincode">PIN Code</Label>
                 <Input
-                    id="pincode"
-                    name="pincode"
-                    value={values.pincode}
+                    id="postalCode"
+                    name="postalCode"
+                    value={values.postalCode}
                     onChange={onChange}
                     required
                 />

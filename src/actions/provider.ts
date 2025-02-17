@@ -1,53 +1,48 @@
 "use server";
 
 import { db } from "@/src/lib/db";
-import { uploadToMega } from "@/src/lib/mega";
-import {currentUser} from "@clerk/nextjs/server";
+import  cloudinary  from "@/src/lib/cloudinary";
 
-export async function registerServicePartner(formData: FormData) {
+export async function registerServicePartner(formData: any) {
     try {
-        const experience = formData.get("experience") as string;
-        const bio = formData.get("bio") as string;
-        const upi = formData.get("upi") as string;
-        const serviceAreas = formData.get("serviceAreas") as string;
-        const idCardFile = formData.get("idCard") as File;
-        const user = await currentUser();
-        const email = user?.emailAddresses[0]?.emailAddress; // Correct way to get email
-        const existingUser = await db.user.findUnique({
-            where: {
-                email: email,
-            },
-        });
-        if (!existingUser) {
-            return { error: "User not found." };
-        }
-        if (!experience || !serviceAreas || !idCardFile) {
+        const fullName = formData.get("fullName");
+        const email = formData.get("email");
+        const address = formData.get("address");
+        const phone = formData.get("phone");
+        const experience = formData.get("experience");
+        const bio = formData.get("bio");
+        const upi = formData.get("upi");
+        const serviceAreas = formData.get("serviceAreas");
+        const idCardFile = formData.get("idCard");
+        const userId=formData.get("userId");
+
+        if (!fullName || !email || !address || !phone || !experience || !serviceAreas || !idCardFile) {
             return { error: "Missing required fields." };
         }
         if (!(idCardFile instanceof File)) {
             return { error: "Invalid file upload." };
         }
-        // Convert the file to a buffer
-        const fileArrayBuffer = await idCardFile.arrayBuffer();
-        const fileBuffer = Buffer.from(fileArrayBuffer);
 
-        if (!fileBuffer || fileBuffer.length === 0) {
-            return { error: "Failed to process file." };
-        }
-
-        console.log("Uploading file...");
-        const fileUrl = await uploadToMega(fileBuffer, idCardFile.name);
-        console.log("File uploaded successfully:", fileUrl);
-
+        const fileBuffer = await idCardFile.arrayBuffer();
+        const base64String = Buffer.from(fileBuffer).toString("base64");
+        const dataUri = `data:${idCardFile.type};base64,${base64String}`;
+        const uploadResponse = await cloudinary.uploader.upload(dataUri, {
+            folder: "services", // Cloudinary folder
+            resource_type: "image",
+        });
         const newServicePartner = await db.servicePartner.create({
             data: {
-                userId: existingUser.id, // Generate a unique ID
+                userId: userId,
+                fullName,
+                email,
+                address,
+                phone,
                 experience: parseInt(experience),
                 bio,
                 upi,
-                serviceAreas: serviceAreas.split(","), // Store as an array
-                isVerified: false,
-                idCard: fileUrl, // Store the uploaded file URL
+                serviceAreas: serviceAreas.split(","),
+                status: "pending",
+                idCard: uploadResponse.secure_url,
             },
         });
 
@@ -55,5 +50,21 @@ export async function registerServicePartner(formData: FormData) {
     } catch (error) {
         console.error("Error registering service partner:", error);
         return { error: "Failed to register service partner." };
+    }
+}
+export async function isServicePartner(userId: string) {
+    try {
+        if (!userId) {
+            return { error: "User ID is required." };
+        }
+
+        const servicePartner = await db.servicePartner.findUnique({
+            where: { userId },
+        });
+
+        return { success: true, data:servicePartner };
+    } catch (error) {
+        console.error("Error checking service partner status:", error);
+        return {success: false, error: "Failed to check service partner status." };
     }
 }
