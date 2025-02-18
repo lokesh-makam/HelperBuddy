@@ -24,6 +24,7 @@ export async function createServiceRequest(data: any) {
                 postalCode: data.postalCode,
                 paymentStatus: data.paymentStatus,
                 paymentMethod: data.paymentMethod,
+                amount: data.amount
             },
         });
 
@@ -31,7 +32,7 @@ export async function createServiceRequest(data: any) {
 
         // ✅ Step 2: Fetch Verified Service Providers
         const verifiedProviders = await db.servicePartner.findMany({
-            where: { status: "verified" },
+            where: { status: "approved" },
             select: { email: true },
         });
 

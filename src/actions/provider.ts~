@@ -15,8 +15,8 @@ export async function registerServicePartner(formData: any) {
         const serviceAreas = formData.get("serviceAreas");
         const idCardFile = formData.get("idCard");
         const userId=formData.get("userId");
-
-        if (!fullName || !email || !address || !phone || !experience || !serviceAreas || !idCardFile) {
+        console.log(fullName, email, address, phone, experience, bio, upi, serviceAreas, idCardFile, userId)
+        if (!fullName || !email || !address || !phone || !experience || !serviceAreas || !idCardFile || !userId) {
             return { error: "Missing required fields." };
         }
         if (!(idCardFile instanceof File)) {
@@ -61,7 +61,7 @@ export async function isServicePartner(userId: string) {
         const servicePartner = await db.servicePartner.findUnique({
             where: { userId },
         });
-
+        if(!servicePartner) return {success: false, error: "Service partner not found." };
         return { success: true, data:servicePartner };
     } catch (error) {
         console.error("Error checking service partner status:", error);

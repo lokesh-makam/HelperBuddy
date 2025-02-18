@@ -14,7 +14,6 @@ import {useRouter} from "next/navigation";
 import Loading from "@/src/app/loading";
 
 export default function Layout() {
-    // Add client-side only state initialization
     const [isClient, setIsClient] = useState(false);
     const [isOpen, setIsOpen] = useState(true);
     const [selectedSection, setSelectedSection] = useState("dashboard");
@@ -22,7 +21,6 @@ export default function Layout() {
     const [loading, setLoading] = useState(true);
     const router = useRouter();
     const [partner, setPartner] = useState<any>(null);
-    // Use useEffect to handle client-side initialization
     useEffect(() => {
         setIsClient(true);
     }, []);
@@ -34,22 +32,23 @@ export default function Layout() {
                 if(res.success){
                   if(res?.data?.status==="pending"){
                     toast.error("Please wait for admin approval!");
-                    setLoading(false);
                     router.push('/provider');
+                    return;
                   }
                   if(res?.data?.status==="rejected"){
                     toast.error("Your documents are rejected by admin! Please Register as service partner again!");
-                    setLoading(false);
                     router.push('/provider');
+                    return;
                   }
                   if(res?.data?.status==="approved"){
                     setPartner(res?.data);
                     setLoading(false);
+                    return;
                   }
                 }else{
                     toast.error("Register first as service partner!");
-                    setLoading(false);
                     router.push('/provider');
+                    return;
                 }
             }
         }
@@ -126,7 +125,7 @@ export default function Layout() {
                             {selectedSection === "invitation" && <ClientOnlyInvitation partnerdetails={partner}/>}
                             {selectedSection === "recent-order" && <ClientOnlyRecentOrders partnerdetails={partner} />}
                             {selectedSection === "review" && <ClientOnlyReviews partnerdetails={partner}/>}
-                            {selectedSection === "edit" && <ClientOnlyEditService partnerdetails={partner}/>}
+                            {selectedSection === "edit" && <ClientOnlyEditService/>}
                         </div>
                     </main>
                 </div>

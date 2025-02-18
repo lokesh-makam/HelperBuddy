@@ -5,6 +5,7 @@ import {useQuery} from "@tanstack/react-query";
 import Loading from "@/src/app/loading";
 import {addAddressdb, editAddressdb, getAddresses, removeAddressdb, setDefaultAddressdb} from "@/src/actions/addresses";
 import {useAddressStore} from "@/src/store/addressstore";
+import {useUser} from "@clerk/nextjs";
 
 export default function AddressPage() {
   const addresses=useAddressStore((state) => state.addresses);
@@ -12,18 +13,20 @@ export default function AddressPage() {
   const addAddress=useAddressStore((state) => state.addAddress);
   const removeaddress=useAddressStore((state) => state.removeAddress);
   const setDefaultAddress=useAddressStore((state) => state.setDefaultAddress);
-  const {data, isLoading,isError} = useQuery(
-      {
-        queryKey: ['Addresses'],
-        queryFn: getAddresses,
-      }
-  )
+  const [loading, setLoading] = useState(true);
+  const {user}=useUser();
   useEffect(() => {
-    if(data){
-      // @ts-ignore
-      setAddresses(data);
-    }
-  }, [data]);
+   if(user) {
+     setFormData(
+         {...formData,
+         id:user.id}
+     )
+   getAddresses(user.id).then((data) => {
+     setAddresses(data);
+     setLoading(false);
+   })
+   }
+  }, [user]);
   const [isEditing, setIsEditing] = useState< string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState({
@@ -34,10 +37,9 @@ export default function AddressPage() {
     postalCode: "",
     country: "",
     default: false,
+    id:user?.id||"",
   });
-  if(isLoading) return <Loading/>
-  if(isError) return <div>Error</div>
-
+  if(loading) return <Loading/>
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData({
@@ -74,6 +76,7 @@ export default function AddressPage() {
         postalCode: "",
         country: "",
         default: false,
+        id:user?.id||"",
       });
       setIsAdding(false);
       setIsEditing(null);
@@ -213,7 +216,7 @@ export default function AddressPage() {
               <h3 className="text-lg font-semibold text-black">
                {address.default && <span className="text-sm text-gray-600">(Default)</span>}
               </h3>
-              <p className="text-black"> {address.houseNo  }+","+{address.street}</p>
+              <p className="text-black"> {address.houseNo  },{address.street}</p>
               <p className="text-black">
                 {address.city}, {address.state} {address.postalCode}
               </p>

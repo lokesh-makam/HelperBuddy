@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from 'react-icons/fa';
+import {contactUs} from "@/src/actions/contact";
+import {toast} from "react-toastify";
 
 export const Contact = () => {
     const [formData, setFormData] = useState({ name: '', email: '', message: '' });
@@ -11,8 +13,11 @@ export const Contact = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit =async (e: React.FormEvent) => {
         e.preventDefault();
+        const res=await contactUs({ fullName: formData.name, email: formData.email, message: formData.message });
+        if(res.success) toast.success(res.success);
+        else toast.error(res.error);
         console.log('Form Submitted:', formData);
     };
 

@@ -115,22 +115,20 @@ const CheckoutPage = () => {
                         address: formData.address,
                         city: formData.city,
                         state: formData.state,
-                        postalCode: formData.pincode,
-                        country: formData.country,
+                        postalCode: formData.postalCode,
                         paymentStatus: paymentStatus,
                         paymentMethod: formData.paymentMethod,
+                         amount: totalAmount
                     });
                     if(!result.success){
                         failedItems.push(item.id);
                     }
             }
-
             if (failedItems.length > 0) {
                 toast.error(`Failed to place orders for ${failedItems.length} items.`);
                 setStep(1);
                 return;
             }
-
             // ✅ Clear Cart Only If All Requests Succeed
             clearCart();
             setStep(3);

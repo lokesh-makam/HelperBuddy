@@ -27,7 +27,7 @@ export async function enterReferralCode(userId: string, referralCode: string) {
     }
 
     try {
-        // Find the referrer
+        // Find the referrer by their referral code
         const referrer = await db.user.findUnique({
             where: { referralCode },
         });
@@ -40,6 +40,7 @@ export async function enterReferralCode(userId: string, referralCode: string) {
         if (referrer.id === userId) {
             return { error: "You cannot refer yourself." };
         }
+
         const existingReferral = await db.referral.findFirst({
             where: {
                 OR: [
@@ -53,13 +54,13 @@ export async function enterReferralCode(userId: string, referralCode: string) {
             return { error: "Referral already exists between these users." };
         }
 
-        // Check referral limits
+        // Check referral limits for the referrer
         const referrerReferralCount = await db.referral.count({ where: { referrerId: referrer.id } });
         if (referrerReferralCount >= REFERRAL_LIMIT) {
             return { error: `Referrer has reached the limit of ${REFERRAL_LIMIT} referrals.` };
         }
 
-        // Apply referral and update wallets atomically
+        // Apply referral reward only to the referrer
         await db.$transaction([
             db.referral.create({
                 data: {
@@ -72,18 +73,27 @@ export async function enterReferralCode(userId: string, referralCode: string) {
                 where: { id: referrer.id },
                 data: { walletBalance: { increment: REWARD_AMOUNT } },
             }),
-            db.user.update({
-                where: { id: userId },
-                data: { walletBalance: { increment: REWARD_AMOUNT } },
-            }),
         ]);
 
-        return { success: `Referral applied! ₹${REWARD_AMOUNT} added to both wallets.` };
+        return { success: `Referral applied! ₹${REWARD_AMOUNT} added to referrer's wallet.` };
     } catch (error: any) {
         if (error.code === "P2002") {
             return { error: "You have already used a referral code and cannot use another." };
         }
         console.error("Failed to process referral:", error);
         return { error: "Something went wrong. Please try again." };
+    }
+}
+
+export const getwallet=async(userId:string)=>{
+    try {
+        const user = await db.user.findUnique({
+            where: { id: userId },
+            select: { walletBalance: true },
+        });
+        return user?.walletBalance || null;
+    } catch (error) {
+        console.error("Failed to fetch wallet balance:", error);
+        return null;
     }
 }

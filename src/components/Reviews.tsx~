@@ -27,22 +27,36 @@ import {getReviewsByServicePartner} from "@/src/actions/review";
 import Loading from "@/src/app/loading";
 
 interface Review {
-  createdAt: any;
   id: string;
-  serviceRequestId: string;
-  rating: number;
-  review: string;
+  orderId: string;
+  userName: string;
+  serviceName: string;
   serviceDate: string;
-  serviceRequest: {
-    createdAt: any;
-    id: string;
-    firstName: string;
-    service: {
-      name: string;
-    };
-  };
+  rating: number;
+  detailedReview: string;
 }
 
+// const mockReviews: Review[] = [
+//   {
+//     id: '1',
+//     orderId: 'ORD001',
+//     userName: 'John Doe',
+//     serviceName: 'House Cleaning',
+//     serviceDate: '2024-02-15',
+//     rating: 4.5,
+//     detailedReview: 'Great service! Very thorough and professional. Would definitely recommend.'
+//   },
+//   {
+//     id: '2',
+//     orderId: 'ORD002',
+//     userName: 'Jane Smith',
+//     serviceName: 'Plumbing Repair',
+//     serviceDate: '2024-02-14',
+//     rating: 5,
+//     detailedReview: 'Fixed the issue quickly and efficiently. Very knowledgeable.'
+//   },
+//   // Add more mock reviews as needed
+// ];
 
 export default function ReviewsPage({partnerdetails}:any) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -54,7 +68,7 @@ export default function ReviewsPage({partnerdetails}:any) {
     if(partnerdetails){
       getReviewsByServicePartner(partnerdetails.id).then((res)=>{
         if(res.success){
-          setMockReviews(res?.data);
+          setMockReviews(res.data);
           setLoading(false)
         }
       })

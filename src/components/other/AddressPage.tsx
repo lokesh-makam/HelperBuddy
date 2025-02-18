@@ -5,6 +5,7 @@ import {useQuery} from "@tanstack/react-query";
 import Loading from "@/src/app/loading";
 import {addAddressdb, editAddressdb, getAddresses, removeAddressdb, setDefaultAddressdb} from "@/src/actions/addresses";
 import {useAddressStore} from "@/src/store/addressstore";
+import {useUser} from "@clerk/nextjs";
 
 export default function AddressPage() {
   const addresses=useAddressStore((state) => state.addresses);
@@ -12,18 +13,16 @@ export default function AddressPage() {
   const addAddress=useAddressStore((state) => state.addAddress);
   const removeaddress=useAddressStore((state) => state.removeAddress);
   const setDefaultAddress=useAddressStore((state) => state.setDefaultAddress);
-  const {data, isLoading,isError} = useQuery(
-      {
-        queryKey: ['Addresses'],
-        queryFn: getAddresses,
-      }
-  )
+  const [loading, setLoading] = useState(true);
+  const {user}=useUser();
   useEffect(() => {
-    if(data){
-      // @ts-ignore
-      setAddresses(data);
-    }
-  }, [data]);
+   if(user) {
+   getAddresses(user.id).then((data) => {
+     setAddresses(data);
+     setLoading(false);
+   })
+   }
+  }, [user]);
   const [isEditing, setIsEditing] = useState< string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState({
@@ -35,9 +34,7 @@ export default function AddressPage() {
     country: "",
     default: false,
   });
-  if(isLoading) return <Loading/>
-  if(isError) return <div>Error</div>
-
+  if(loading) return <Loading/>
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData({
@@ -58,7 +55,7 @@ export default function AddressPage() {
       }
     } else {
       console.log(formData);
-      const result = await addAddressdb(formData);
+      const result = await addAddressdb(formData,user.id);
       if (result) {
         addAddress(result);
       }

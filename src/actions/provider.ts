@@ -15,8 +15,7 @@ export async function registerServicePartner(formData: any) {
         const serviceAreas = formData.get("serviceAreas");
         const idCardFile = formData.get("idCard");
         const userId=formData.get("userId");
-
-        if (!fullName || !email || !address || !phone || !experience || !serviceAreas || !idCardFile) {
+        if (!fullName || !email || !address || !phone || !experience || !serviceAreas || !idCardFile || !userId) {
             return { error: "Missing required fields." };
         }
         if (!(idCardFile instanceof File)) {

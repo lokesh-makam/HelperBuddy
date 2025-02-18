@@ -118,6 +118,7 @@ const CheckoutPage = () => {
                         postalCode: formData.postalCode,
                         paymentStatus: paymentStatus,
                         paymentMethod: formData.paymentMethod,
+                        amount: totalAmount
                     });
                     if(!result.success){
                         failedItems.push(item.id);

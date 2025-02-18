@@ -1,6 +1,7 @@
-"use client"
-import React, { useState } from "react";
-import { Trash2, Package, User, ShoppingCart, AlertCircle } from "lucide-react";
+'use client';
+
+import React, { useState, useEffect } from "react";
+import { Trash2, Package, User, ShoppingCart, AlertCircle, Star } from "lucide-react";
 import {
     AlertDialog,
     AlertDialogContent,
@@ -14,98 +15,108 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/ca
 import { Badge } from "@/src/components/ui/badge";
 import { Label } from "@/src/components/ui/label";
 import { Textarea } from "@/src/components/ui/textarea";
+import { fetchOrders, cancelOrderServer } from "@/src/actions/user";
+import Loading from "@/src/app/loading";
+import { useUser } from "@clerk/nextjs";
+import { toast } from "react-toastify";
+import {submitreview} from "@/src/actions/review";
 
 const OrderManagement = () => {
-    const [orders, setOrders] = useState([
-        {
-            id: 1,
-            customerName: "John Doe",
-            items: [
-                { product: "Laptop", quantity: 1, price: 1200 },
-                { product: "Mouse", quantity: 2, price: 40 },
-            ],
-            total: 1280,
-            status: "Processing",
-            cancellationReason: null,
-        },
-        {
-            id: 2,
-            customerName: "Alice Smith",
-            items: [{ product: "Smartphone", quantity: 1, price: 900 }],
-            total: 900,
-            status: "Shipped",
-            cancellationReason: null,
-        },
-        {
-            id: 3,
-            customerName: "Alice Smith",
-            items: [{ product: "Smartphone", quantity: 1, price: 900 }],
-            total: 900,
-            status: "Shipped",
-            cancellationReason: null,
-        },
-        {
-            id: 4,
-            customerName: "Alice Smith",
-            items: [{ product: "Smartphone", quantity: 1, price: 900 }],
-            total: 900,
-            status: "Shipped",
-            cancellationReason: null,
-        },
-        {
-            id: 5,
-            customerName: "Alice Smith",
-            items: [{ product: "Smartphone", quantity: 1, price: 900 }],
-            total: 900,
-            status: "Shipped",
-            cancellationReason: null,
-        },
-    ]);
-
+    const [orders, setOrders] = useState([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [cancellationReason, setCancellationReason] = useState("");
     const [reasonError, setReasonError] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
+    const [reviewText, setReviewText] = useState("");
+    const [reviewError, setReviewError] = useState(false);
+    const [rating, setRating] = useState(0); // New state for rating
+    const { user } = useUser();
 
-    const confirmCancelOrder = (orderId:any) => {
+    useEffect(() => {
+        if (user) {
+            fetchOrders(user.id).then((data: any) => {
+                console.log(data);
+                setOrders(data);
+                setLoading(false);
+            });
+        }
+    }, [user]);
+
+    const confirmCancelOrder = (orderId: any) => {
         setSelectedOrder(orderId);
         setIsDialogOpen(true);
         setCancellationReason("");
         setReasonError(false);
     };
 
-    const cancelOrder = () => {
+    const cancelOrder = async () => {
         if (!cancellationReason.trim()) {
             setReasonError(true);
             return;
         }
-
-        setOrders((prevOrders):any =>
-            prevOrders.map((order) =>
-                order.id === selectedOrder
-                    ? {
-                        ...order,
-                        status: "Cancelled",
-                        cancellationReason: cancellationReason.trim(),
-                    }
-                    : order
-            )
-        );
+        if (!selectedOrder) return;
+        const res = await cancelOrderServer(selectedOrder, cancellationReason);
+        if (res.success) {
+            setOrders((prevOrders: any) =>
+                prevOrders.map((order: any) =>
+                    order.id === selectedOrder
+                        ? { ...order, status: "Cancelled", cancellationReason }
+                        : order
+                )
+            );
+        } else {
+            toast.error(res.message);
+        }
         setIsDialogOpen(false);
         setSelectedOrder(null);
         setCancellationReason("");
         setReasonError(false);
     };
 
-    const getStatusColor = (status:any) => {
+    const handleReviewClick = (orderId: any) => {
+        setSelectedOrder(orderId);
+        setIsReviewDialogOpen(true);
+        setReviewText("");
+        setReviewError(false);
+        setRating(0); // Reset rating when opening the dialog
+    };
+
+    const submitReview =async () => {
+        if (!reviewText.trim()) {
+            setReviewError(true);
+            return;
+        }
+        if (rating === 0) {
+            toast.error("Please select a rating before submitting.");
+            return;
+        }
+        if(!selectedOrder) return;
+        const res=await submitreview({ serviceRequestId: selectedOrder, rating:rating, review: reviewText });
+        if(!res.success){
+            toast.error(res.error);
+            return;
+        }
+        console.log("Review submitted for order:", selectedOrder, "with text:", reviewText, "and rating:", rating);
+        toast.success("Review submitted successfully!");
+        setIsReviewDialogOpen(false);
+        setSelectedOrder(null);
+        setReviewText("");
+        setRating(0);
+    };
+
+    const getStatusColor = (status: any) => {
         const colors = {
-            Processing: "bg-blue-100 text-blue-800",
-            Shipped: "bg-green-100 text-green-800",
-            Cancelled: "bg-red-100 text-red-800",
+            pending: "bg-blue-100 text-blue-800",
+            Accepted: "bg-green-100 text-yellow-800",
+            completed: "bg-green-100 text-green-800",
+            cancelled: "bg-red-100 text-red-800",
         };
-        // @ts-ignore
         return colors[status] || "bg-gray-100 text-gray-800";
     };
+
+    if (loading) return <Loading />;
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -115,63 +126,58 @@ const OrderManagement = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {orders.map((order) => (
+                {orders?.map((order: any) => (
                     <Card key={order.id} className="w-full">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-xl font-semibold flex items-center gap-2">
                                 <User className="h-5 w-5" />
-                                {order.customerName}
+                                {order.firstName} {order.lastName}
                             </CardTitle>
-                            <Badge
-                                className={`${getStatusColor(order.status)} px-2 py-1 rounded-full`}
-                            >
+                            <Badge className={`${getStatusColor(order.status)} px-2 py-1 rounded-full`}>
                                 {order.status}
                             </Badge>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-4">
-                                <div className="mt-4">
-                                    <div className="text-sm text-gray-500 mb-2">Order Items:</div>
-                                    <ul className="space-y-2">
-                                        {order.items.map((item, index) => (
-                                            <li
-                                                key={index}
-                                                className="flex items-center justify-between bg-gray-50 p-2 rounded-md"
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    <Package className="h-4 w-4 text-gray-500" />
-                                                    <span>{item.product}</span>
-                                                </div>
-                                                <div className="text-sm">
-                                                    {item.quantity} x ${item.price}
-                                                </div>
-                                            </li>
-                                        ))}
-                                    </ul>
+                                <div className="flex justify-between items-center pt-4 border-t">
+                                    <div className="font-semibold">Service:</div>
+                                    <div className="text-md font-bold">{order?.service?.name}</div>
+                                </div>
+                                <div className="flex justify-between items-center pt-4 border-t">
+                                    <div className="font-semibold">Provider:</div>
+                                    <div className="text-md font-bold">{order?.servicePartner?.fullName || "-"}</div>
+                                </div>
+                                <div className="flex justify-between items-center pt-4 border-t">
+                                    <div className="font-semibold">Phone:</div>
+                                    <div className="text-md font-bold">{order?.servicePartner?.phone || "-"}</div>
                                 </div>
                                 <div className="flex justify-between items-center pt-4 border-t">
                                     <div className="font-semibold">Total:</div>
-                                    <div className="text-lg font-bold">${order.total}</div>
+                                    <div className="text-md font-bold">Rs {order?.service?.basePrice}</div>
                                 </div>
-                                {order.status === "Cancelled" && (
-                                    <div className="mt-2 p-3 bg-red-50 rounded-md">
-                                        <div className="text-sm font-medium text-red-800 mb-1">
-                                            Cancellation Reason:
-                                        </div>
-                                        <div className="text-sm text-red-600 break-words max-h-24 overflow-y-auto">
-                                            {order.cancellationReason}
-                                        </div>
+                                <div className="flex justify-between items-center pt-4 border-t">
+                                    <div className="font-semibold">Date:</div>
+                                    <div className="text-md font-bold">{new Date(order.createdAt).toLocaleDateString()}</div>
+                                </div>
+                                {order.status !== "cancelled" && (
+                                    <div className="flex flex-col gap-2">
+                                        <Button
+                                            variant="destructive"
+                                            className="w-full"
+                                            onClick={() => confirmCancelOrder(order.id)}
+                                        >
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            Cancel Order
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            className="w-full"
+                                            onClick={() => handleReviewClick(order.id)}
+                                        >
+                                            <Star className="mr-2 h-4 w-4" />
+                                            Leave a Review
+                                        </Button>
                                     </div>
-                                )}
-                                {order.status !== "Cancelled" && (
-                                    <Button
-                                        variant="destructive"
-                                        className="w-full"
-                                        onClick={() => confirmCancelOrder(order.id)}
-                                    >
-                                        <Trash2 className="mr-2 h-4 w-4" />
-                                        Cancel Order
-                                    </Button>
                                 )}
                             </div>
                         </CardContent>
@@ -179,13 +185,13 @@ const OrderManagement = () => {
                 ))}
             </div>
 
+            {/* Cancel Order Dialog */}
             <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Cancel Order</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Please provide a reason for cancelling this order. This action cannot
-                            be undone.
+                            Please provide a reason for cancelling this order. This action cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <div className="py-4">
@@ -193,10 +199,7 @@ const OrderManagement = () => {
                         <Textarea
                             id="cancellation-reason"
                             value={cancellationReason}
-                            onChange={(e) => {
-                                setCancellationReason(e.target.value);
-                                setReasonError(false);
-                            }}
+                            onChange={(e) => setCancellationReason(e.target.value)}
                             placeholder="Enter the reason for cancellation"
                             className={`resize-none h-32 ${reasonError ? "border-red-500" : ""}`}
                         />
@@ -208,17 +211,64 @@ const OrderManagement = () => {
                         )}
                     </div>
                     <AlertDialogFooter>
-                        <Button
-                            variant="outline"
-                            onClick={() => {
-                                setIsDialogOpen(false);
-                                setReasonError(false);
-                            }}
-                        >
+                        <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                             Keep Order
                         </Button>
                         <Button onClick={cancelOrder} variant="destructive">
                             Cancel Order
+                        </Button>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Review Dialog */}
+            <AlertDialog open={isReviewDialogOpen} onOpenChange={setIsReviewDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Leave a Review</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Share your experience with this service. Your feedback is valuable!
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <div className="py-4">
+                        {/* Rating Section */}
+                        <div className="mb-4">
+                            <Label>Rating</Label>
+                            <div className="flex items-center gap-1">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <button
+                                        key={star}
+                                        onClick={() => setRating(star)}
+                                        className={`text-2xl ${star <= rating ? "text-yellow-500" : "text-gray-300"}`}
+                                    >
+                                        ★
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Review Text Section */}
+                        <Label htmlFor="review-text">Your Review</Label>
+                        <Textarea
+                            id="review-text"
+                            value={reviewText}
+                            onChange={(e) => setReviewText(e.target.value)}
+                            placeholder="Write your review here..."
+                            className={`resize-none h-32 ${reviewError ? "border-red-500" : ""}`}
+                        />
+                        {reviewError && (
+                            <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
+                                <AlertCircle className="h-4 w-4" />
+                                Please write a review before submitting.
+                            </div>
+                        )}
+                    </div>
+                    <AlertDialogFooter>
+                        <Button variant="outline" onClick={() => setIsReviewDialogOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button onClick={submitReview}>
+                            Submit Review
                         </Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>

@@ -66,15 +66,17 @@ CREATE TABLE "ServiceRequest" (
     "city" TEXT NOT NULL,
     "state" TEXT NOT NULL,
     "postalCode" TEXT NOT NULL,
+    "amount" INTEGER NOT NULL,
     "preferredDate" TIMESTAMP(3),
     "preferredTime" TEXT,
     "acceptedByProvider" BOOLEAN NOT NULL DEFAULT false,
     "acceptedAt" TIMESTAMP(3),
     "completedAt" TIMESTAMP(3),
+    "completionstatus" TEXT NOT NULL DEFAULT 'pending',
     "rating" INTEGER,
     "review" TEXT,
     "reviewedAt" TIMESTAMP(3),
-    "paymentStatus" TEXT NOT NULL DEFAULT 'Pending',
+    "paymentStatus" TEXT NOT NULL DEFAULT 'pending',
     "paymentMethod" TEXT,
     "paymentAt" TIMESTAMP(3),
     "cancellationReason" TEXT,
@@ -114,6 +116,17 @@ CREATE TABLE "Referral" (
     CONSTRAINT "Referral_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "Review" (
+    "id" TEXT NOT NULL,
+    "serviceRequestId" TEXT NOT NULL,
+    "rating" INTEGER NOT NULL,
+    "review" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Review_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -146,3 +159,6 @@ ALTER TABLE "Referral" ADD CONSTRAINT "Referral_referrerId_fkey" FOREIGN KEY ("r
 
 -- AddForeignKey
 ALTER TABLE "Referral" ADD CONSTRAINT "Referral_refereeId_fkey" FOREIGN KEY ("refereeId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Review" ADD CONSTRAINT "Review_serviceRequestId_fkey" FOREIGN KEY ("serviceRequestId") REFERENCES "ServiceRequest"("id") ON DELETE CASCADE ON UPDATE CASCADE;

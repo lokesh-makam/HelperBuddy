@@ -86,7 +86,7 @@ export default function DashboardPage({partnerdetails}:any) {
             <CheckCircle className="h-4 w-4 text-gray-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data?.completedServicesCount}</div>
+            <div className="text-2xl font-bold">{data.completedServicesCount}</div>
             <p className="text-xs text-gray-600">Completed services</p>
           </CardContent>
         </Card>
@@ -97,7 +97,7 @@ export default function DashboardPage({partnerdetails}:any) {
             <ClipboardList className="h-4 w-4 text-gray-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data?.pendingServicesCount}</div>
+            <div className="text-2xl font-bold">{data.pendingServicesCount}</div>
             <p className="text-xs text-gray-600">Awaiting completion</p>
           </CardContent>
         </Card>

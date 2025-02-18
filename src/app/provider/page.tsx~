@@ -40,7 +40,6 @@ export default function ServicePartnerForm() {
                 ...prev,
                  fullName: user.fullName || "",
                 email: user.primaryEmailAddress?.emailAddress || "",
-                userId: user.id || "",
             }));
         }
     }, [user]);
@@ -116,6 +115,7 @@ export default function ServicePartnerForm() {
                 }
             });
             formData.append("idCard", idCard);
+            formData.append("userId", user.id);
             const result = await registerServicePartner(formData);
 
             if (result.success) {

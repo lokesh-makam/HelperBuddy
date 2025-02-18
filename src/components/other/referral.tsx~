@@ -10,7 +10,7 @@ import {getReferralCode} from "@/src/actions/referal";
 const ReferralPage = () => {
     const [copied, setCopied] = useState(false);
     const { user } = useUser();
-    const [referralCode, setReferralCode] = useState('-');
+    const [referralCode, setReferralCode] = useState('');
     useEffect(() => {
         if(user){
             getReferralCode(user.id).then(

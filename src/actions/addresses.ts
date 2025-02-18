@@ -1,33 +1,12 @@
 "use server";
 
-import { db } from "@/src/lib/db";
-import { currentUser } from "@clerk/nextjs/server";
+import {db} from "@/src/lib/db";
 
-export const getAddresses = async () => {
+export const getAddresses = async (id:string) => {
     try {
-        // Get the currently logged-in user
-        const user1 = await currentUser();
-        const email = user1?.emailAddresses[0]?.emailAddress;
-
-        if (!email) {
-            console.error("Error: No email found for the user.");
-            return [];
-        }
-
-        // Find the user by email
-        const user = await db.user.findUnique({
-            where: { email },
-            select: { id: true }, // Get only the user ID
-        });
-
-        if (!user) {
-            console.warn("User not found in the database.");
-            return [];
-        }
-
         // Fetch addresses using user ID
         return await db.address.findMany({
-            where: { userId: user.id },
+            where: { userId: id },
             orderBy: { createdAt: "desc" },
         });
 
@@ -79,39 +58,23 @@ export const addAddressdb = async (addressData: {
     postalCode: string;
     country: string;
     default: boolean;
-}) => {
+},id:string) => {
     try {
-        // Get current user
-        const user1 = await currentUser();
-        const email = user1?.emailAddresses[0]?.emailAddress;
-
-        if (!email) throw new Error("User email not found");
-
-        // Find user in database
-        const user = await db.user.findUnique({
-            where: { email },
-            select: { id: true },
-        });
-
-        if (!user) throw new Error("User not found in database");
-
-        // If setting as default, unset previous default
+        if(!addressData.houseNo || !addressData.street || !addressData.city || !addressData.state || !addressData.postalCode || !addressData.country) throw new Error("All fields are required");
         if (addressData.default) {
             await db.address.updateMany({
-                where: { userId: user.id, default: true },
+                where: { userId: id, default: true },
                 data: { default: false },
             });
         }
 
         // Add the new address
-        const newAddress = await db.address.create({
+        return await db.address.create({
             data: {
-                userId: user.id,
+                userId: id,
                 ...addressData,
             },
         });
-
-        return newAddress;
     } catch (error) {
         console.error("Error adding address:", error);
         throw new Error("Failed to add address");
