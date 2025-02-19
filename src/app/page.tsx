@@ -3,18 +3,24 @@
 import Home from "@/src/components/Home";
 import { useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
-import { saveUserToDatabase } from "@/src/actions/user";
+import {getuser, saveUserToDatabase} from "@/src/actions/user";
 import Loading from "@/src/app/loading";
 import {enterReferralCode} from "@/src/actions/referal";
 import {toast} from "react-toastify";
+import {useRouter} from "next/navigation";
 
 let Main = () => {
   const { user, isLoaded } = useUser();
   const [referal, setReferal] = useState(false);
   const [referralCode, setReferralCode] = useState("");
-
+  const router = useRouter();
   useEffect(() => {
+
     const handleUserCheck = async () => {
+      const res1=await getuser(user?.emailAddresses[0]?.emailAddress||"");
+      if(res1?.role==='admin'){
+        router.push('/admin');
+      }
       if (!isLoaded || !user) return;
       const res = await saveUserToDatabase({
         id: user.id,
@@ -26,7 +32,6 @@ let Main = () => {
     };
     handleUserCheck();
   }, [isLoaded, user]);
-
   const handleReferralSubmit = () => {
     if (referralCode.trim()) {
       // Handle referral code submission logic

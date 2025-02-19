@@ -1,5 +1,6 @@
 "use server";
-import { db } from "@/src/lib/db";
+import {db} from "@/src/lib/db";
+
 export async function saveUserToDatabase(props: any) {
     try {
         const existingUser = await db.user.findUnique({
@@ -69,4 +70,10 @@ export async function cancelOrderServer(orderId: string,reason: string) {
         console.error("Error cancelling order:", error);
         return { success: false, message: error || "Something went wrong" };
     }
+}
+export async function getuser(email:string){
+    console.log(email)
+    const res=await db.user.findUnique({where: {email}});
+    console.log(res)
+    return res;
 }

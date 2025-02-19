@@ -57,10 +57,13 @@ export const Navbar: React.FC<NavbarProps> = () => {
         }
     ];
     const handleLogin = () => {
-        router.push("/login");
+        router.push("/sign-in");
         setIsUserMenuOpen(false);
     };
-
+  const handlesignup=() => {
+    router.push("/sign-up");
+    setIsUserMenuOpen(false);
+  }
     const handleLogout =async () => {
         await signOut(); // Clerk Sign-Out
         router.push("/sign-in");
@@ -183,7 +186,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
                                         </button>
                                         <p className="text-xs text-gray-500 mt-3 text-center">
                                             New customer?{" "}
-                                            <button className="text-black font-medium hover:underline">
+                                            <button className="text-black font-medium hover:underline" onClick={handlesignup}>
                                                 Sign Up
                                             </button>
                                         </p>

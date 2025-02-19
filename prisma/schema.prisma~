@@ -18,7 +18,6 @@ model User {
   referralCode      String           @unique @default(uuid()) // Unique referral code for each user
   requests          ServiceRequest[]
   servicePartner    ServicePartner?
-  role              String           @default("user")
   address           Address[]
   referralsSent     Referral[]       @relation("Referrer") // Users this user referred
   referralsReceived Referral?        @relation("Referee") // Users who referred this user

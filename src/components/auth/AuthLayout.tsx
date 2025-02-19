@@ -10,7 +10,7 @@ interface AuthLayoutProps {
 
 export function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <div className="h-[90vh] bg-gray-100 flex items-center justify-center">
+    <div className="h-[100vh] bg-gray-100 flex items-center justify-center">
       {/* Main Container with enhanced shadow */}
       <div className="w-full min-h-full bg-black shadow-[0px_8px_100px_rgba(0,0,0,0.6)] overflow-hidden flex transition-shadow duration-300 ease-in-out hover:shadow-[0px_10px_120px_rgba(0,0,0,0.7)]">
         {/* Left side - Image Section */}

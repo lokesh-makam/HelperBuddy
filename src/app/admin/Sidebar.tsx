@@ -1,27 +1,28 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Home,
   User,
+  ListChecks,
+  FileText,
+  Table,
+  MessageCircle,
+  Mail,
+  Settings,
   ChevronLeft,
   ChevronRight,
   Star,
   Briefcase,
   LogOut,
-  Rss,
-  ShoppingBag,
+  RssIcon,
+  ShoppingBagIcon,
   ContactRoundIcon,
-  Users,
-  BadgeCheck,
-  Building
 } from "lucide-react";
 
 interface SidebarProps {
   activeMenuItem: string;
   setActiveMenuItem: (menuItem: string) => void;
-  isCollapsed: boolean;
-  toggleSidebar: () => void;
 }
 
 export default function Sidebar({
@@ -31,106 +32,66 @@ export default function Sidebar({
   toggleSidebar,
 }: SidebarProps) {
   const menuItems = [
-    { name: 'Dashboard', icon: <Home size={24} /> },
-    { name: 'User Profile', icon: <User size={24} /> },
-    { name: 'Blogs', icon: <Rss size={24} /> },
-    { name: 'Users', icon: <Users size={24} /> },
-    { name: 'Recent Services', icon: <ShoppingBag size={24} /> },
-    { name: 'Service Providers', icon: <BadgeCheck size={24} /> },
-    { name: 'Providers', icon: <Building size={24} /> },
-    { name: 'Reviews & Feedback', icon: <Star size={24} /> },
-    { name: 'Services Management', icon: <Briefcase size={24} /> },
+    { name: "Dashboard", icon: <Home size={24} /> },
+    { name: "User Profile", icon: <User size={24} /> },
+    { name: "Blogs", icon: <RssIcon size={24} /> },
+    { name: "Recent Services", icon: <ShoppingBagIcon size={24} /> },
+    { name: "Service Providers", icon: <ContactRoundIcon size={24} /> },
+    { name: "Reviews & Feedback", icon: <Star size={24} /> },
+    { name: "Services Management", icon: <Briefcase size={24} /> },
   ];
 
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
   return (
-    <>
-      {/* Floating toggle button for mobile only - visible when sidebar is collapsed */}
-      {isMobile && isCollapsed && (
-        <button
-          className="fixed top-1/2 left-2 z-[60] bg-blue-600 text-white p-2 rounded-full shadow-lg"
-          onClick={toggleSidebar}
-          aria-label="Open sidebar"
-        >
-          <ChevronRight className="w-5 h-5" />
-        </button>
-      )}
-
-      {/* Sidebar */}
-      <aside
-        className={`h-screen bg-white shadow-md border-r border-gray-200 flex flex-col justify-between 
-          ${isMobile ? "fixed top-0 left-0" : "relative"} 
-          transition-all duration-300 ease-in-out
-          ${isMobile && isCollapsed ? "-translate-x-full" : "translate-x-0"} 
-          ${!isMobile ? (isCollapsed ? "w-[4.5rem]" : "w-64") : "w-64"}
-        `}
-      >
-        <div>
-          <div className="flex justify-between items-center p-4">
-            {!isCollapsed && (
-              <h1 className="text-2xl font-bold text-blue-600">HelperBuddy</h1>
-            )}
-            <button
-              className="p-1.5 md:p-2 rounded-full hover:bg-gray-200 ml-auto"
-              onClick={toggleSidebar}
-            >
-              {isCollapsed ? (
-                <ChevronRight className="w-5 h-5" />
-              ) : (
-                <ChevronLeft className="w-5 h-5" />
-              )}
-            </button>
-          </div>
-          <nav className="flex-1">
-            <ul className="space-y-1 pl-3">
-              {menuItems.map((item) => (
-                <li
-                  key={item.name}
-                  onClick={() => setActiveMenuItem(item.name)}
-                  className={`flex items-center gap-3 text-[15px] font-medium cursor-pointer px-3 py-2 rounded-lg transition-all duration-200 ease-in-out ${
-                    activeMenuItem === item.name
-                      ? "bg-blue-100 text-blue-600 font-semibold"
-                      : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
-                  }`}
-                >
-                  <span className="hidden md:block">{item.icon}</span>
-                  {!isCollapsed && <span>{item.name}</span>}
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </div>
-
-        <div className="p-4">
+    <aside
+      className={`h-screen bg-white shadow-md border-r border-gray-200 transition-all duration-300 fixed md:relative z-50 ${
+        isCollapsed ? "w-20" : "w-64"
+      } flex flex-col justify-between`}
+    >
+      <div>
+        <div className="flex justify-between items-center p-4">
+          {!isCollapsed && (
+            <h1 className="text-2xl font-bold text-blue-600">HelperBuddy</h1>
+          )}
           <button
-            onClick={() => console.log("Logging out...")}
-            className="flex items-center gap-3 text-[15px] font-medium text-gray-700 hover:bg-gray-50 hover:text-red-600 px-3 py-2 rounded-lg transition-all duration-200 ease-in-out"
+            className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+            onClick={toggleSidebar}
           >
-            <LogOut size={24} className="hidden md:block" />
-            {!isCollapsed && <span>Logout</span>}
+            {isCollapsed ? (
+              <ChevronRight size={20} />
+            ) : (
+              <ChevronLeft size={20} />
+            )}
           </button>
         </div>
-      </aside>
+        <nav className="flex-1">
+          <ul className="space-y-1 pl-3">
+            {menuItems.map((item) => (
+              <li
+                key={item.name}
+                onClick={() => setActiveMenuItem(item.name)}
+                className={`flex items-center gap-3 text-[15px] font-medium cursor-pointer px-3 py-2 rounded-lg transition ${
+                  activeMenuItem === item.name
+                    ? "bg-blue-100 text-blue-600 font-semibold"
+                    : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                }`}
+              >
+                {item.icon}
+                {!isCollapsed && <span>{item.name}</span>}
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
 
-      {/* Backdrop when sidebar is open on mobile */}
-      {isMobile && !isCollapsed && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={toggleSidebar}
-        />
-      )}
-    </>
+      <div className="p-4">
+        <button
+          onClick={() => console.log("Logging out...")}
+          className="flex items-center gap-3 text-[15px] font-medium text-gray-700 hover:bg-gray-50 hover:text-red-600 px-3 py-2 rounded-lg transition"
+        >
+          <LogOut size={24} />
+          {!isCollapsed && <span>Logout</span>}
+        </button>
+      </div>
+    </aside>
   );
 }

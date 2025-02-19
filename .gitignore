@@ -34,3 +34,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Ignore environment variables
+.env
+.env.local
+.env.development
+.env.production
+.env.test

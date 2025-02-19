@@ -13,9 +13,9 @@ const Signin = () => {
     const [clerkError, setClerkError] = useState("");
     const router = useRouter();
     const { isSignedIn } = useUser();
-    // if (isSignedIn) {
-    //     router.push("/");
-    // }
+    if (isSignedIn) {
+        router.push("/");
+    }
     const validateEmail = (email: string) => {
         return /\S+@\S+\.\S+/.test(email);
     };

@@ -50,7 +50,6 @@ const ServiceCard: React.FC<any> = ({ service }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const isInCart = cart.some((item: { id: any }) => item.id === service.id);
     const { toast } = useToast();
-
     // Enrich service with mock reviews if it doesn't have any
     const enrichedService = {
         ...service,
