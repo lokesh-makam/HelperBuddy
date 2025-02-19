@@ -39,27 +39,27 @@ export const Footer: React.FC = () => {
                     <h2 className="text-2xl font-bold text-white">Quick Links</h2>
                     <ul className="space-y-4">
                         <li>
-                            <Link href="#" className="text-gray-300 hover:text-blue-500 transition duration-300 flex items-center gap-2">
+                            <Link href="/services" className="text-gray-300 hover:text-blue-500 transition duration-300 flex items-center gap-2">
                                 <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
-                                Support Office
+                                Services
                             </Link>
                         </li>
                         <li>
-                            <Link href="#" className="text-gray-300 hover:text-blue-500 transition duration-300 flex items-center gap-2">
+                            <Link href="/about" className="text-gray-300 hover:text-blue-500 transition duration-300 flex items-center gap-2">
                                 <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
-                                Install Value
+                                About Us
                             </Link>
                         </li>
                         <li>
-                            <Link href="#" className="text-gray-300 hover:text-blue-500 transition duration-300 flex items-center gap-2">
+                            <Link href="/contact" className="text-gray-300 hover:text-blue-500 transition duration-300 flex items-center gap-2">
                                 <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
-                                Voyaways
+                                Contact Us
                             </Link>
                         </li>
                         <li>
-                            <Link href="#" className="text-gray-300 hover:text-blue-500 transition duration-300 flex items-center gap-2">
+                            <Link href="/provider" className="text-gray-300 hover:text-blue-500 transition duration-300 flex items-center gap-2">
                                 <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
-                                Sendring Support
+                                Register as a Provider
                             </Link>
                         </li>
                     </ul>
