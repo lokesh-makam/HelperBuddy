@@ -10,7 +10,6 @@ import ProgressProvider from "@/src/components/ProgressSidebar";
 import { Navbar } from "@/src/components/navbar";
 import { CartProvider } from "@/src/context/CartContext";
 import Providers from "../components/other/queryprovider";
-import NavbarWrapper from "@/src/components/NavbarWrapper";
 
 // Correctly import Footer
 const Footer = dynamic(() => import("@/src/components/other/footer").then((mod) => mod.Footer), { ssr: false });
@@ -60,7 +59,7 @@ export default function RootLayout({
                 <CartProvider>
                     <ProgressProvider />
                     <div className="flex-1 flex flex-col">
-                        <NavbarWrapper/>
+                        
                         <main className="flex-1">{children}</main>
                     </div>
                     {showFooter && (

@@ -1,31 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Sidebar from '@/src/app/admin/Sidebar';
-import Dashboard from '@/src/app/admin/Dashboard';
-import UserProfile from '@/src/app/admin/UserProfile';
-import Blogs from '@/src/app/admin/Blogs';
+import { useState } from 'react';
+import Sidebar from '@/src/app/admin1/Sidebar';
+import Dashboard from '@/src/app/admin1/Dashboard';
+import UserProfile from '@/src/app/admin1/UserProfile';
+import Blogs from '@/src/app/admin1/Blogs';
 import ServiceCards from './RecentServices';
 import AdminProviderApproval from './ServiceProvider';
 import Reviews from './Reviews';
 import ServiceManagement from './ServiceManage';
-import UsersPage from './Users';
-import ServiceProvidersPage from './ProviderData';
 
 export default function HomePage() {
   const [activeMenuItem, setActiveMenuItem] = useState('Dashboard');
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [profileImage, setProfileImage] = useState('https://randomuser.me/api/portraits/men/75.jpg');
-  const [isMobile, setIsMobile] = useState(false);
 
   const toggleSidebar = () => setIsCollapsed((prev) => !prev);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   return (
     <div className="flex h-screen bg-gray-50 text-gray-800">
@@ -36,16 +26,8 @@ export default function HomePage() {
         toggleSidebar={toggleSidebar}
       />
 
-      <div
-        className={`flex flex-col h-screen transition-all duration-300 ${
-          isMobile
-            ? isCollapsed
-              ? 'ml-0'
-              : 'ml-64'
-            : 'ml-0' // <- THIS IS KEY FOR DESKTOP, IGNORE COLLAPSE WIDTH SHIFT
-        } flex-1`}
-      >
-        <header className="bg-white shadow-md p-4 flex justify-between items-center shrink-0">
+      <div className="flex-1 flex flex-col md:ml-0 ml-20">
+        <header className="bg-white shadow-md p-4 flex justify-between items-center">
           <div className="relative flex-1 max-w-md">
             <input
               type="text"
@@ -64,7 +46,7 @@ export default function HomePage() {
           </div>
         </header>
 
-        <main className="flex-grow h-0 overflow-y-auto p-4 bg-gray-100">
+        <main className="p-4 flex-1 overflow-auto">
           {activeMenuItem === 'Dashboard' && <Dashboard />}
           {activeMenuItem === 'User Profile' && <UserProfile profileImage={profileImage} setProfileImage={setProfileImage} />}
           {activeMenuItem === 'Blogs' && <Blogs />}
@@ -72,8 +54,6 @@ export default function HomePage() {
           {activeMenuItem === 'Service Providers' && <AdminProviderApproval />}
           {activeMenuItem === 'Reviews & Feedback' && <Reviews />}
           {activeMenuItem === 'Services Management' && <ServiceManagement />}
-          {activeMenuItem === 'Users' && <UsersPage />}
-          {activeMenuItem === 'Providers' && <ServiceProvidersPage />}
         </main>
       </div>
     </div>

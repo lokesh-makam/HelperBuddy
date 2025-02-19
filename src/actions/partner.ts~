@@ -143,15 +143,15 @@ export const getAcceptedServiceRequests = async (partnerId: string) => {
         },
     });
 };
-// export const getAcceptedServiceRequests = async () => {
-//
-//     return db.serviceRequest.findMany({
-//         where: {
-//             acceptedByProvider: true, // Only requests accepted by the partner
-//         },
-//         include: {
-//             user: true, // Include user details
-//             service: true, // Include service details
-//         },
-//     });
-// };
+export const getAcceptedServiceRequests = async () => {
+
+    return db.serviceRequest.findMany({
+        where: {
+            acceptedByProvider: true, // Only requests accepted by the partner
+        },
+        include: {
+            user: true, // Include user details
+            service: true, // Include service details
+        },
+    });
+};

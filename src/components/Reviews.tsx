@@ -54,6 +54,7 @@ export default function ReviewsPage({partnerdetails}:any) {
     if(partnerdetails){
       getReviewsByServicePartner(partnerdetails.id).then((res)=>{
         if(res.success){
+          //@ts-ignore
           setMockReviews(res?.data);
           setLoading(false)
         }

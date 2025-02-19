@@ -1,0 +1,101 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/src/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/src/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/src/components/ui/alert-dialog';
+import { Button } from '@/src/components/ui/button';
+import { Badge } from '@/src/components/ui/badge';
+import { Search } from 'lucide-react';
+import { fetchReviews, toggleReviewVisibility } from '@/src/actions/reviewActions';
+
+const AdminReviewsPage = () => {
+  const router = useRouter();
+  const [reviews, setReviews] = useState([]);
+  const [selectedReview, setSelectedReview] = useState(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [confirmDialogAction, setConfirmDialogAction] = useState(null);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+
+  useEffect(() => {
+    const loadReviews = async () => {
+      const data = await fetchReviews();
+      setReviews(data);
+    };
+    loadReviews();
+  }, []);
+
+  const handleViewReview = (review) => {
+    setSelectedReview(review);
+    setIsViewDialogOpen(true);
+  };
+
+  const handleDisplayToggleConfirm = (review, action) => {
+    setSelectedReview(review);
+    setConfirmDialogAction(action);
+    setIsConfirmDialogOpen(true);
+  };
+
+  const toggleReviewDisplay = async () => {
+    if (selectedReview && confirmDialogAction) {
+      const updatedReview = await toggleReviewVisibility(selectedReview.id, confirmDialogAction === 'display');
+      setReviews(reviews.map(review => (review.id === updatedReview.id ? updatedReview : review)));
+      setIsConfirmDialogOpen(false);
+      setConfirmDialogAction(null);
+    }
+  };
+
+  return (
+      <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto">
+        <h1 className="text-2xl font-bold mb-6">Manage Reviews</h1>
+        <div className="overflow-x-auto rounded-lg border shadow">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Review ID</TableHead>
+                <TableHead>User</TableHead>
+                <TableHead>Service Name</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {reviews.map((review) => (
+                  <TableRow key={review.id}>
+                    <TableCell>{review.id}</TableCell>
+                    <TableCell>{review.userName}</TableCell>
+                    <TableCell>{review.serviceName}</TableCell>
+                    <TableCell>
+                      <Badge variant={review.isDisplayed ? 'success' : 'destructive'}>
+                        {review.isDisplayed ? 'Displayed' : 'Hidden'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right space-x-1">
+                      <Button onClick={() => handleViewReview(review)} variant="outline" size="sm">View</Button>
+                      <Button onClick={() => handleDisplayToggleConfirm(review, review.isDisplayed ? 'hide' : 'display')} variant={review.isDisplayed ? 'destructive' : 'secondary'} size="sm">
+                        {review.isDisplayed ? 'Hide' : 'Display'}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+        <AlertDialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{confirmDialogAction === 'display' ? 'Display this review?' : 'Hide this review?'}</AlertDialogTitle>
+              <AlertDialogDescription>{confirmDialogAction === 'display' ? 'This will make the review visible to all users.' : 'This will hide the review from all users.'}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={toggleReviewDisplay}>{confirmDialogAction === 'display' ? 'Yes, Display' : 'Yes, Hide'}</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+  );
+};
+
+export default AdminReviewsPage;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCart } from "@/src/context/CartContext";
+// import { useCart } from "@/src/context/CartContext";
 import {MotionWrapper} from "@/src/components/other/MotionWrapper";
 import {SectionLayout} from "@/src/components/layout/sectionLayout";
 import {Text} from "@/src/components/other/text";
@@ -13,55 +13,55 @@ import { useEffect } from "react";
 import FAQ from "@/src/components/other/FAQ";
 import ApplianceRepair from "@/src/components/other/OurServices";
 export default function Home() {
-    const { addToCart } = useCart(); // Use the useCart hook
-    const spaData = [
-        {
-            title: "Stress Relief",
-            image: "https://via.placeholder.com/400x300?text=Stress+Relief",
-            link: "#stress-relief",
-        },
-        {
-            title: "Pain Relief",
-            image: "https://via.placeholder.com/400x300?text=Pain+Relief",
-            link: "#pain-relief",
-        },
-        {
-            title: "Natural Skincare",
-            image: "https://via.placeholder.com/400x300?text=Natural+Skincare",
-            link: "#natural-skincare",
-        },
-    ];
-    const services = [
-        {
-            id: 1,
-            name: "AC Service and Repair",
-            image: "/images/mai.png",
-        },
-        {
-            id: 2,
-            name: "Washing Machine Repair",
-            image: "/images/mai.png",
-        },
-        {
-            id: 3,
-            name: "Water Purifier Repair",
-            image: "/images/mai.png",
-        },
-        {
-            id: 4,
-            name: "Refrigerator Repair",
-            image: "/images/mai.png",
-        },
-        {
-            id: 5,
-            name: "Microwave Repair",
-            image: "/images/mai.png",
-        },
-        {
-            id: 6,
-            name: "TV Repair",
-            image: "/images/mai.png",
-        },  ];
+    // const { addToCart } = useCart(); // Use the useCart hook
+    // const spaData = [
+    //     {
+    //         title: "Stress Relief",
+    //         image: "https://via.placeholder.com/400x300?text=Stress+Relief",
+    //         link: "#stress-relief",
+    //     },
+    //     {
+    //         title: "Pain Relief",
+    //         image: "https://via.placeholder.com/400x300?text=Pain+Relief",
+    //         link: "#pain-relief",
+    //     },
+    //     {
+    //         title: "Natural Skincare",
+    //         image: "https://via.placeholder.com/400x300?text=Natural+Skincare",
+    //         link: "#natural-skincare",
+    //     },
+    // ];
+    // const services = [
+    //     {
+    //         id: 1,
+    //         name: "AC Service and Repair",
+    //         image: "/images/mai.png",
+    //     },
+    //     {
+    //         id: 2,
+    //         name: "Washing Machine Repair",
+    //         image: "/images/mai.png",
+    //     },
+    //     {
+    //         id: 3,
+    //         name: "Water Purifier Repair",
+    //         image: "/images/mai.png",
+    //     },
+    //     {
+    //         id: 4,
+    //         name: "Refrigerator Repair",
+    //         image: "/images/mai.png",
+    //     },
+    //     {
+    //         id: 5,
+    //         name: "Microwave Repair",
+    //         image: "/images/mai.png",
+    //     },
+    //     {
+    //         id: 6,
+    //         name: "TV Repair",
+    //         image: "/images/mai.png",
+    //     },  ];
 
     // Scroll animations for cards
     const controls = useAnimation();

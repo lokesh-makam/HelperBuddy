@@ -89,48 +89,53 @@ export const Contact = () => {
 
                     {/* Contact Details */}
                     <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.5, delay: 0.3 }}
+                        initial={{opacity: 0, x: 20}}
+                        animate={{opacity: 1, x: 0}}
+                        transition={{duration: 0.5, delay: 0.3}}
                         className="flex-1 space-y-6"
                     >
                         <div className="flex items-center space-x-4">
-                            <FaMapMarkerAlt className="text-black text-2xl" />
+                            <FaMapMarkerAlt className="text-black text-2xl"/>
                             <div>
                                 <p className="text-gray-800 font-semibold">Address</p>
-                                <p className="text-gray-600">123 Space Street, Hyderabad, India</p>
+                                <p className="text-gray-600">Amroli Cross Rd, near Santosh Electronics,</p>
+                                <p className="text-gray-600">Bhagu Nagar-1, Amroli, Surat, Gujarat 394107</p>
                             </div>
                         </div>
 
                         <div className="flex items-center space-x-4">
-                            <FaPhone className="text-black text-2xl" />
+                            <FaPhone className="text-black text-2xl"/>
                             <div>
                                 <p className="text-gray-800 font-semibold">Phone</p>
-                                <p className="text-gray-600">+91 98765 43210</p>
+                                <p className="text-gray-600">+91 63593 98479</p>
                             </div>
                         </div>
 
                         <div className="flex items-center space-x-4">
-                            <FaEnvelope className="text-black text-2xl" />
+                            <FaEnvelope className="text-black text-2xl"/>
                             <div>
                                 <p className="text-gray-800 font-semibold">Email</p>
-                                <p className="text-gray-600">support@cosmicvoyage.com</p>
+                                <p className="text-gray-600">hello@helperbuddy.in</p>
                             </div>
                         </div>
 
                         {/* Social Media Links */}
                         <div className="flex space-x-6">
-                            <a href="#" className="text-gray-600 hover:text-black transition duration-300">
-                                <FaFacebook size={24} />
+                            <a href="https://www.facebook.com/people/Helper-Buddy/"
+                               className="text-gray-600 hover:text-black transition duration-300">
+                                <FaFacebook size={24}/>
                             </a>
-                            <a href="#" className="text-gray-600 hover:text-black transition duration-300">
-                                <FaTwitter size={24} />
+                            <a href="https://x.com/helperbuddyin"
+                               className="text-gray-600 hover:text-black transition duration-300">
+                                <FaTwitter size={24}/>
                             </a>
-                            <a href="#" className="text-gray-600 hover:text-black transition duration-300">
-                                <FaInstagram size={24} />
+                            <a href="https://www.instagram.com/helperbuddy.in/"
+                               className="text-gray-600 hover:text-black transition duration-300">
+                                <FaInstagram size={24}/>
                             </a>
-                            <a href="#" className="text-gray-600 hover:text-black transition duration-300">
-                                <FaLinkedin size={24} />
+                            <a href="https://www.linkedin.com/company/helperbuddy/"
+                               className="text-gray-600 hover:text-black transition duration-300">
+                                <FaLinkedin size={24}/>
                             </a>
                         </div>
                     </motion.div>

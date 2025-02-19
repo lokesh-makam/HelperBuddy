@@ -31,6 +31,7 @@ let Main = () => {
     if (referralCode.trim()) {
       // Handle referral code submission logic
       console.log("Referral Code Submitted:", referralCode);
+      //@ts-ignore
      enterReferralCode(user.id, referralCode).then((res) =>{
        if(res.success){
          toast.success(res.success);

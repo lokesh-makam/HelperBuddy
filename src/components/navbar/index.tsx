@@ -85,6 +85,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
     const isTransparent = isMainRoute && !isScrolling;
     const navbarBg = isTransparent ? "bg-transparent" : "bg-white";
     const textColor = isTransparent ? "text-white" : "text-black";
+    const color=isTransparent ? "white" : "black";
     return (
         <>
             <div className={cn(
@@ -103,7 +104,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
                         >
                             <HamburgerMenu className={`w-6 ${textColor}`}/>
                         </button>
-                        <Logo textColour={textColor}/>
+                        <Logo textColour={color}/>
                     </div>
 
                     {/* Nav links section */}
@@ -122,9 +123,9 @@ export const Navbar: React.FC<NavbarProps> = () => {
                             >
                                 <UserIcon
                                     stroke={isScrolling ? "black" : "white"}
-                                    className="w-5 h-5"
+                                    className="w-6 h-6"
                                 />
-                                <span className={`hidden md:block text-sm font-medium ${textColor}`}>
+                                <span className={`hidden md:block text-md font-medium ${textColor}`}>
                   {isSignedIn ? user?.firstName : 'Login'}
                 </span>
                                 <ChevronDown className={`w-4 h-4 hidden md:block ${textColor}`}/>

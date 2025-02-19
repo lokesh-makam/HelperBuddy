@@ -6,8 +6,8 @@ import { FaFacebookF, FaInstagram, FaLinkedinIn, FaTwitter, FaMapMarkerAlt, FaPh
 
 export const Footer: React.FC = () => {
     return (
-        <footer className="w-full bg-gray-900 text-white py-12 px-6 lg:px-12">
-            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <footer className="w-full bg-gray-900 text-white py-12 px-4 sm:px-6 lg:px-12">
+            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
 
                 {/* Section 1: Get in Touch */}
                 <div className="space-y-6">
@@ -15,20 +15,21 @@ export const Footer: React.FC = () => {
                         <span className="text-blue-500">Get in</span> Touch
                     </h2>
                     <div className="space-y-4">
-                        <div className="flex items-center gap-4">
-                            <FaMapMarkerAlt className="text-blue-500 text-xl" />
+                        <div className="flex items-start gap-4">
+                            <FaMapMarkerAlt className="text-blue-500 text-xl mt-1 flex-shrink-0" />
                             <p className="text-gray-300">
-                                SVNIT, Ichchhanath,<br />
-                                Surat, Gujarat 395007
+                                Amroli Cross Rd, near Santosh Electronics,<br />
+                                Bhagu Nagar-1, Amroli,<br />
+                                Surat, Gujarat 394107
                             </p>
                         </div>
                         <div className="flex items-center gap-4">
-                            <FaPhoneAlt className="text-blue-500 text-xl" />
+                            <FaPhoneAlt className="text-blue-500 text-xl flex-shrink-0" />
                             <p className="text-gray-300">+91 6359398479</p>
                         </div>
                         <div className="flex items-center gap-4">
-                            <FaEnvelope className="text-blue-500 text-xl" />
-                            <p className="text-gray-300">hello@svnit.ac.in</p>
+                            <FaEnvelope className="text-blue-500 text-xl flex-shrink-0" />
+                            <p className="text-gray-300">hello@helperbuddy.in</p>
                         </div>
                     </div>
                 </div>
@@ -38,71 +39,76 @@ export const Footer: React.FC = () => {
                     <h2 className="text-2xl font-bold text-white">Quick Links</h2>
                     <ul className="space-y-4">
                         <li>
-                            <Link href="#" className="text-gray-300 hover:text-blue-500 transition duration-300">
+                            <Link href="#" className="text-gray-300 hover:text-blue-500 transition duration-300 flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
                                 Support Office
                             </Link>
                         </li>
                         <li>
-                            <Link href="#" className="text-gray-300 hover:text-blue-500 transition duration-300">
+                            <Link href="#" className="text-gray-300 hover:text-blue-500 transition duration-300 flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
                                 Install Value
                             </Link>
                         </li>
                         <li>
-                            <Link href="#" className="text-gray-300 hover:text-blue-500 transition duration-300">
+                            <Link href="#" className="text-gray-300 hover:text-blue-500 transition duration-300 flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
                                 Voyaways
                             </Link>
                         </li>
                         <li>
-                            <Link href="#" className="text-gray-300 hover:text-blue-500 transition duration-300">
+                            <Link href="#" className="text-gray-300 hover:text-blue-500 transition duration-300 flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
                                 Sendring Support
                             </Link>
                         </li>
                     </ul>
+
+                    {/* Follow Us section moved here and centered */}
+
                 </div>
 
-                {/* Section 3: Map */}
-                <div className="space-y-6">
+                {/* Section 3: Map (horizontal layout with consistent height) */}
+                <div className="space-y-4">
                     <h2 className="text-2xl font-bold text-white">Location</h2>
-                    <iframe
-                        className="w-full h-48 rounded-lg shadow-lg border-2 border-gray-700"
-                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3752.304077025078!2d72.78198817506232!3d21.16708068050214!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04f13ed7e6b77%3A0x8bca226ed4a13b0e!2sSardar%20Vallabhbhai%20National%20Institute%20of%20Technology!5e0!3m2!1sen!2sin!4v1710209387326"
-                        allowFullScreen
-                        loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade"
-                    ></iframe>
-                    <Link href="#" className="text-blue-500 hover:text-blue-400 transition duration-300">
-                        View larger map
-                    </Link>
-                </div>
-
-                {/* Section 4: Social Media */}
-                <div className="space-y-6">
-                    <h2 className="text-2xl font-bold text-white">Follow Us</h2>
-                    <div className="flex gap-6">
-                        <Link href="#" className="text-gray-300 hover:text-blue-500 transition duration-300 text-2xl">
-                            <FaFacebookF />
-                        </Link>
-                        <Link href="#" className="text-gray-300 hover:text-pink-500 transition duration-300 text-2xl">
-                            <FaInstagram />
-                        </Link>
-                        <Link href="#" className="text-gray-300 hover:text-blue-700 transition duration-300 text-2xl">
-                            <FaLinkedinIn />
-                        </Link>
-                        <Link href="#" className="text-gray-300 hover:text-gray-400 transition duration-300 text-2xl">
-                            <FaTwitter />
+                    <div className="relative h-56 w-full rounded-lg overflow-hidden shadow-lg border-2 border-gray-700">
+                        <iframe
+                            className="absolute inset-0 w-full h-full"
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3718.727889356322!2d72.84831267604505!3d21.239818980676194!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04f19b1cbca6f%3A0x7b5cd817dc032251!2sAmroli%20Cross%20Rd%2C%20Bhagu%20Nagar-1%2C%20Amroli%2C%20Surat%2C%20Gujarat%20394107!5e0!3m2!1sen!2sin!4v1708416452987!5m2!1sen!2sin"
+                            allowFullScreen
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                        ></iframe>
+                    </div>
+                    <div className="flex justify-start items-center">
+                        <Link href="https://www.google.com/maps/search/Amroli+Cross+Rd,+near+Santosh+Electronics,+Bhagu+Nagar-1,+Amroli,+Surat,+Gujarat+394107/@21.239819,72.85002,13z?hl=en-GB&entry=ttu"
+                              className="text-blue-500 hover:text-blue-400 transition duration-300 underline"
+                              target="_blank" rel="noopener noreferrer">
+                            View larger map
                         </Link>
                     </div>
                 </div>
             </div>
 
             {/* Footer Bottom */}
-            <div className="border-t border-gray-800 mt-12 pt-8 text-center">
-                <p className="text-gray-400">
-                    &copy; {new Date().getFullYear()} SVNIT. All rights reserved.
-                </p>
-                <p className="text-gray-400 mt-2">
-                    Designed with ❤️ by Your Name
-                </p>
+            <div className="border-t border-gray-800 mt-8  text-center">
+                <div className="space-y-4 mt-4">
+                    <h3 className="text-lg font-semibold text-white">Follow Us</h3>
+                    <div className="flex justify-center gap-6">
+                        <Link href="https://www.facebook.com/people/Helper-Buddy/" className="text-gray-300 hover:text-blue-500 transition-all duration-300 transform hover:scale-110">
+                            <FaFacebookF className="text-xl" />
+                        </Link>
+                        <Link href="https://www.instagram.com/helperbuddy.in/" className="text-gray-300 hover:text-pink-500 transition-all duration-300 transform hover:scale-110">
+                            <FaInstagram className="text-xl" />
+                        </Link>
+                        <Link href="https://www.linkedin.com/company/helperbuddy/" className="text-gray-300 hover:text-blue-700 transition-all duration-300 transform hover:scale-110">
+                            <FaLinkedinIn className="text-xl" />
+                        </Link>
+                        <Link href="https://x.com/helperbuddyin" className="text-gray-300 hover:text-blue-400 transition-all duration-300 transform hover:scale-110">
+                            <FaTwitter className="text-xl" />
+                        </Link>
+                    </div>
+                </div>
             </div>
         </footer>
     );

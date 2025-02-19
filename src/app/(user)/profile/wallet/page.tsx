@@ -13,6 +13,7 @@ const WalletPage = () => {
     useEffect(() => {
         if(user){
             console.log(user);
+            //@ts-ignore
             getwallet(user.id).then((data) => setBalance(data));
             setLoading(false)
         }

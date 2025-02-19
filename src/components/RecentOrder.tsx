@@ -64,6 +64,7 @@ export default function RecentOrders({ partnerdetails }: any) {
   useEffect(() => {
     if (user) {
       getAcceptedServiceRequests(partnerdetails.id).then((orders) => {
+        //@ts-ignore
         setOrders(orders || []);
         setLoading(false);
       });
