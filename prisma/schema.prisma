@@ -7,6 +7,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum AddressType {
+  HOME
+  OFFICE
+  OTHER
+}
+
 model User {
   id                String           @id
   email             String           @unique
@@ -25,76 +31,74 @@ model User {
 }
 
 model ServicePartner {
-  id                     String           @id @default(cuid())
-  user                   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId                 String           @unique
+  id                     String                  @id @default(cuid())
+  user                   User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId                 String                  @unique
   experience             Int
   fullName               String
-  email                  String
+  email                  String                  @unique
   phone                  String
   address                String
-  totalServicesCompleted Int              @default(0)
-  rating                 Int              @default(0)
-  pendingServices        Int              @default(0)
-  createdAt              DateTime         @default(now())
-  updatedAt              DateTime         @updatedAt
+  totalServicesCompleted Int                     @default(0)
+  rating                 Int                     @default(0)
+  pendingServices        Int                     @default(0)
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
   bio                    String?
-  status                 String           @default("pending")
+  status                 String                  @default("pending")
   upi                    String?
-  serviceAreas           String[]
+  serviceAreas           String
   idCard                 String? // URL of the uploaded ID card
   serviceRequests        ServiceRequest[]
+  servicePartnerServices ServicePartnerService[]
+}
+
+model ServicePartnerService {
+  id               String         @id @default(cuid())
+  servicePartner   ServicePartner @relation(fields: [servicePartnerId], references: [id], onDelete: Cascade)
+  servicePartnerId String
+  service          Service        @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  serviceId        String
+  status           String         @default("pending")
+  createdAt        DateTime       @default(now())
 }
 
 model Service {
-  id            String           @id @default(cuid())
-  name          String
-  description   String?
-  category      String
-  basePrice     Int
-  estimatedTime String?
-  rating        Int?
-  imageUrl      String?
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  requests      ServiceRequest[] // Requests for this service
+  id                     String                  @id @default(cuid())
+  name                   String
+  description            String?
+  category               String
+  basePrice              Int
+  estimatedTime          String?
+  rating                 Float                   @default(0)
+  includes               String?
+  imageUrl               String?
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  requests               ServiceRequest[] // Requests for this service
+  servicePartnerServices ServicePartnerService[]
 }
 
 model ServiceRequest {
-  id               String          @id @default(cuid())
-  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId           String
-  service          Service         @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  serviceId        String
-  servicePartner   ServicePartner? @relation(fields: [servicePartnerId], references: [id], onDelete: Cascade) // Fixed Relation
-  servicePartnerId String?
-  status           String          @default("Pending")
-
-  firstName  String
-  lastName   String
-  email      String
-  phone      String
-  address    String
-  city       String
-  state      String
-  postalCode String
-  amount     Int
-
-  preferredDate DateTime?
-  preferredTime String?
-
-  acceptedByProvider Boolean   @default(false)
+  id                 String          @id @default(cuid())
+  user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId             String
+  service            Service         @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  serviceId          String
+  servicePartner     ServicePartner? @relation(fields: [servicePartnerId], references: [id], onDelete: Cascade)
+  servicePartnerId   String?
+  status             String          @default("pending")
+  firstName          String
+  lastName           String
+  email              String
+  phone              String
+  acceptedByProvider Boolean         @default(false)
   acceptedAt         DateTime?
   completedAt        DateTime?
-  completionstatus   String    @default("pending")
+  completionstatus   String          @default("pending")
 
-  rating     Int? // Rating from 1 to 5
-  review     String? // Optional review text
-  reviewedAt DateTime?
-
-  paymentStatus String    @default("pending")
-  paymentMethod String?
-  paymentAt     DateTime?
+  paymentStatus String @default("pending")
+  paymentMethod String
 
   cancellationReason String?
   cancelledAt        DateTime?
@@ -102,22 +106,40 @@ model ServiceRequest {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Additional fields
+  houseNo          String
+  street           String
+  city             String
+  state            String
+  postalCode       String
+  country          String
+  addressType      String
+  serviceDate      DateTime // kept as string to match ISO date string usage, could be DateTime if desired
+  serviceTime      String
+  cartTotal        Int
+  tax              Int
+  shippingCost     Int
+  orderTotal       Int
+  walletBalance    Int
+  walletAmountUsed Int
+  amountToPay      Int
+  useWallet        Boolean
+
   Review Review[]
 }
 
 model Address {
-  id         String   @id @default(cuid())
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId     String
-  houseNo    String
-  street     String
-  city       String
-  state      String
-  default    Boolean  @default(false)
-  postalCode String
-  country    String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id          String      @id @default(cuid())
+  houseNo     String
+  street      String
+  city        String
+  state       String
+  postalCode  String
+  country     String
+  default     Boolean
+  addressType AddressType // This field is now of the enum type AddressType
+  userId      String
+  User        User        @relation(fields: [userId], references: [id])
 }
 
 model Referral {
@@ -139,15 +161,21 @@ model Review {
   serviceRequestId String
   rating           Int
   review           String
+  status           String         @default("false")
   createdAt        DateTime       @default(now())
 }
 
 model Blog {
   id          String   @id @default(uuid()) // Unique identifier
   title       String   @db.VarChar(255) // Blog title
-  description String // Blog content
+  excerpt     String // Short summary
+  content     String // Full HTML content
   image       String // Image URL
-  author      String // Author name
+  authorName  String // Author name
+  authorBio   String // Author bio
+  tags        String // Array of tags
+  category    String // Category (e.g. Lifestyle, Tech)
+  readTime    String // Read time
   publishedAt DateTime @default(now()) // Publish date
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
