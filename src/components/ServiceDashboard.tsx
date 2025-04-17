@@ -42,28 +42,17 @@ interface Service {
   isActive: boolean;
 }
 
-// Mock data
-const mockProvider: ServiceProvider = {
-  id: "SP001",
-  name: "John Smith",
-  email: "john.smith@example.com",
-  phone: "+1 (555) 123-4567",
-  registrationDate: "2023-06-15",
-  workingHours: {
-    start: "09:00",
-    end: "17:00"
-  },
-  totalServicesCompleted: 156,
-  pendingServices: 3,
-  rating: 4.8
-};
 
 export default function DashboardPage({partnerdetails}:any) {
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState({})
+  const [data, setData] = useState({
+    completedServicesCount: undefined,
+    pendingServicesCount: undefined
+  })
   useEffect(() => {
      if(partnerdetails){
        countPartnerServices(partnerdetails.id).then((res)=>{
+         // @ts-ignore
          setData(res)
          setLoading(false)
        })

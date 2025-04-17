@@ -1,5 +1,5 @@
 "use client"
-import {useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import { Search } from 'lucide-react';
 import {
   Table,
@@ -26,24 +26,25 @@ import {
 import {getReviewsByServicePartner} from "@/src/actions/review";
 import Loading from "@/src/app/loading";
 
+
 interface Review {
-  createdAt: any;
-  id: string;
-  serviceRequestId: string;
-  rating: number;
-  review: string;
+  id: React.Key | null | undefined;
+  review: any;
+  rating: any;
+  createdAt: string;
   serviceDate: string;
-  serviceRequest: {
-    createdAt: any;
-    id: string;
-    firstName: string;
-    service: {
-      name: string;
-    };
-  };
+  serviceRequestId: React.ReactNode | undefined;
+  serviceRequest: any;
+
 }
 
-
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
 export default function ReviewsPage({partnerdetails}:any) {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('date');
@@ -66,8 +67,8 @@ export default function ReviewsPage({partnerdetails}:any) {
   // Filter and sort reviews
   const filteredReviews = mockReviews.filter(review => 
     review.serviceRequest.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    review.serviceRequest.service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      review.serviceRequestId.toLowerCase().includes(searchTerm.toLowerCase())
+    review.serviceRequest.service.name.toLowerCase().includes(searchTerm.toLowerCase())||
+      review.serviceRequest.id.toLowerCase().includes(searchTerm.toLowerCase())
   ).sort((a, b) => {
     switch (sortBy) {
       case 'date':
@@ -148,28 +149,15 @@ export default function ReviewsPage({partnerdetails}:any) {
                         <DialogTitle>Review Details</DialogTitle>
                       </DialogHeader>
                       <div className="mt-4">
-                        <div className="space-y-4">
-                          <div>
-                            <h4 className="font-semibold">Order Information</h4>
-                            <p>Order ID: {review.id}</p>
-                            <p>Service Date: {new Date(review.serviceRequest.createdAt).toLocaleDateString()}</p>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold">Customer</h4>
-                            <p>{review.serviceRequest.firstName}</p>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold">Service</h4>
-                            <p>{review.serviceRequest.service.name}</p>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold">Rating</h4>
-                            <p>{review.rating} ★</p>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold">Detailed Review</h4>
-                            <p className="text-gray-600">{review.review}</p>
-                          </div>
+                        <div className="space-y-6">
+                          <p><strong>Order ID:</strong> {review.serviceRequest.id}</p>
+                          <p><strong>Customer:</strong> {review.serviceRequest.user.firstName} {review.serviceRequest.user.lastName}</p>
+                          <p><strong>Email:</strong> {review.serviceRequest.user.email}</p>
+                          <p><strong>Service:</strong> {review.serviceRequest.service.name}</p>
+                          <p><strong>Date:</strong> {formatDate(review.createdAt)}</p>
+                          <p><strong>Phone:</strong> {review.serviceRequest.phone}</p>
+                          <p><strong>Rating:</strong> {review.rating}★</p>
+                          <p><strong>Detailed Review:</strong> {review.review}</p>
                         </div>
                       </div>
                     </DialogContent>

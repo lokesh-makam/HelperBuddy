@@ -1,10 +1,10 @@
-import AddressPage from "@/src/components/other/AddressPage"
+import AddressPage from "@/src/components/other/AddressPage";
 
-const MyAddress=()=>{
-    return(
-        <div>
-            <AddressPage/>
-        </div>
-    )
-}
+const MyAddress = () => {
+  return (
+    <div>
+      <AddressPage />
+    </div>
+  );
+};
 export default MyAddress;

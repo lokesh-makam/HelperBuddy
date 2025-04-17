@@ -1,359 +1,551 @@
-"use client"
-import React, { useState } from "react";
-import { Clock, Calendar, X } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/src/components/ui/dialog";
+"use client";
+import React, { useState, useEffect } from "react";
+import {
+  Share,
+  Clock,
+  Calendar,
+  X,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  Facebook,
+  Twitter,
+  Linkedin,
+  Link as LinkIcon,
+} from "lucide-react";
+import { Dialog, DialogContent } from "@/src/components/ui/dialog";
 import { Button } from "@/src/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/src/components/ui/avatar";
 import { Badge } from "@/src/components/ui/badge";
+import { Input } from "@/src/components/ui/input";
+import { motion, AnimatePresence } from "framer-motion";
+import { getBlogs } from "@/src/actions/blog";
+import Loading from "@/src/app/loading";
 
 // Define the blog post type
 interface BlogPost {
-    id: number;
-    title: string;
-    excerpt: string;
-    content: string;
-    author: {
-        name: string;
-        avatar?: string;
-    };
-    date: string;
-    readTime: string;
-    image: string;
-    tags: string[];
-    category: string;
-    videoUrl?: string;
+  id: string; // Unique identifier (UUID)
+  title: string; // Blog title
+  excerpt: string; // Short summary (excerpt)
+  content: string; // Full HTML content
+  image: string; // Image URL
+  authorName: string; // Author name
+  authorBio: string; // Author bio
+  tags: string[]; // Array of tags (strings)
+  category: string; // Category (e.g. Lifestyle, Tech)
+  readTime: string; // Read time (e.g. "5 min read")
+  publishedAt: Date; // Date of publishing
+  createdAt: Date; // Creation date
+  updatedAt: Date; // Date of last update
 }
 
-// Sample blog data - keeping the existing data
-const blogPosts: BlogPost[] = [
-    {
-        id: 1,
-        title: "Glow Up with Clean Beauty: Why It's Trending in 2024",
-        excerpt: "In 2024, the beauty industry is embracing the clean beauty movement more than ever, and it's not just about skincare—it's a full-on lifestyle shift.",
-        content: `
-      <h2>What is Clean Beauty?</h2>
-      <p>Clean beauty refers to products that are made without toxic ingredients, such as parabens, sulfates, phthalates, and synthetic fragrances. It focuses on transparency, ethical sourcing, and safe formulations that not only protect your skin but also the planet. Consumers are now more informed and seeking beauty products that align with their values.</p>
-      
-      <h2>The Rise of Ethical Consumerism</h2>
-      <p>As climate change concerns grow, ethical consumerism is on the rise. People are choosing brands that are eco-friendly, cruelty-free, and ethically produced. Clean beauty products often boast recyclable or biodegradable packaging, further reducing their environmental footprint.</p>
-      
-      <h2>Ingredients Matter</h2>
-      <p>In 2024, consumers are more ingredient-conscious than ever. Clean beauty products are filled with natural and organic ingredients, such as plant-based oils, antioxidants, and botanicals. These ingredients not only nourish the skin but are also less likely to cause irritation, making clean beauty suitable for all skin types, including sensitive skin.</p>
-      
-      <h2>Why Clean Beauty is Here to Stay</h2>
-      <ol>
-        <li><strong>Health Consciousness</strong>: People are becoming more aware of the harmful chemicals in their beauty products and opting for safer alternatives.</li>
-        <li><strong>Sustainability</strong>: The beauty industry is making strides to reduce waste, with many brands launching refillable, reusable, or compostable packaging.</li>
-        <li><strong>Inclusivity</strong>: Clean beauty brands often cater to a wide range of skin tones and types, ensuring that everyone can experience healthier beauty.</li>
-      </ol>
-      
-      <h2>Conclusion</h2>
-      <p>The clean beauty movement is more than just a passing trend—it's a shift toward conscious consumerism and sustainability in the beauty industry. As 2024 progresses, the clean beauty trend will only grow, pushing for transparency and wellness in our beauty routines.</p>
-      <p>So, if you're looking to elevate your beauty regimen this year, it's time to switch to clean, eco-friendly, and healthy products that are kind to your skin and the planet. Let your glow be natural!</p>
-    `,
-        author: {
-            name: "Yash Rawal",
-            avatar: "/avatars/yash.jpg"
-        },
-        date: "December 19, 2024",
-        readTime: "2 min read",
-        image: "/images/mai.png",
-        tags: ["Beauty", "Skincare", "Sustainability"],
-        category: "Lifestyle"
-    },
-    {
-        id: 2,
-        title: "The Future of AI in Everyday Tech: What to Expect in 2025",
-        excerpt: "As AI becomes more integrated into our daily lives, here's what you can expect to see in your devices and apps by 2025.",
-        content: `
-      <h2>AI Assistants Become More Human-like</h2>
-      <p>By 2025, AI assistants will become eerily good at understanding context, emotions, and even sarcasm. They'll handle complex tasks across multiple apps and services seamlessly, making them true digital companions rather than simple command responders.</p>
-      
-      <h2>Personalization Reaches New Heights</h2>
-      <p>From your shopping experiences to your entertainment choices, AI will curate experiences that feel tailor-made for you. Recommendation systems will become so advanced that they'll anticipate your needs before you even realize them yourself.</p>
-      
-      <h2>Healthcare Transformation</h2>
-      <p>AI-powered health monitoring through smartphones and wearables will detect potential health issues days or weeks before symptoms appear. Personalized health insights will become commonplace, with AI suggesting lifestyle changes based on your unique biometric data.</p>
-      
-      <h2>Ethical Considerations</h2>
-      <p>As AI becomes more pervasive, questions about privacy, data ownership, and algorithmic bias will take center stage. Companies will need to balance innovation with strong ethical frameworks to maintain consumer trust.</p>
-      
-      <h2>Conclusion</h2>
-      <p>The integration of AI into everyday technology is accelerating rapidly. While the benefits are immense, we'll also need thoughtful regulation and ethical guidelines to ensure these powerful tools enhance rather than compromise our lives.</p>
-    `,
-        author: {
-            name: "Priya Sharma",
-            avatar: "/avatars/priya.jpg"
-        },
-        date: "January 5, 2025",
-        readTime: "4 min read",
-        image: "/images/mai.png",
-        tags: ["Technology", "AI", "Future Trends"],
-        category: "Tech"
-    },
-    {
-        id: 3,
-        title: "Sustainable Living: Small Changes with Big Impact",
-        excerpt: "Discover how simple everyday choices can dramatically reduce your carbon footprint while saving you money.",
-        content: `
-      <h2>Rethinking Consumption</h2>
-      <p>The first step to sustainable living is consuming less. Before making a purchase, ask yourself: Do I need this? Can I borrow it? Is there a more sustainable alternative? This mindset shift alone can reduce waste significantly.</p>
-      
-      <h2>Energy Efficiency at Home</h2>
-      <p>Simple changes like switching to LED bulbs, using smart thermostats, and unplugging devices when not in use can reduce your energy consumption by up to 30%. These changes not only help the planet but also lower your utility bills.</p>
-      
-      <h2>Sustainable Food Choices</h2>
-      <p>Reducing meat consumption, buying local produce, and minimizing food waste can dramatically cut your carbon footprint. Try implementing "Meatless Mondays" or buying from farmers' markets to start making a difference.</p>
-      
-      <h2>Transportation Alternatives</h2>
-      <p>Walking, cycling, carpooling, or using public transportation even once or twice a week can significantly reduce your carbon emissions. If possible, consider an electric or hybrid vehicle for your next car purchase.</p>
-      
-      <h2>Conclusion</h2>
-      <p>Sustainable living doesn't require radical lifestyle changes. By making small, consistent choices, you can reduce your environmental impact while often improving your health and saving money. Remember, millions of people making imperfect efforts will have a greater impact than a few people doing it perfectly.</p>
-    `,
-        author: {
-            name: "Rohan Mehta",
-            avatar: "/avatars/rohan.jpg"
-        },
-        date: "February 2, 2025",
-        readTime: "3 min read",
-        image: "/images/mai.png",
-        tags: ["Sustainability", "Lifestyle", "Environment"],
-        category: "Environment"
-    },
-    {
-        id: 4,
-        title: "Digital Detox: Why Everyone Needs a Tech Break in 2025",
-        excerpt: "In an increasingly connected world, taking regular breaks from technology has become essential for mental health and productivity.",
-        content: `
-      <h2>Signs You Need a Digital Detox</h2>
-      <p>Do you check your phone first thing in the morning? Feel anxious when your battery is low? Struggle to concentrate on one task? These could be signs that you need a break from your devices.</p>
-      
-      <h2>Benefits of Unplugging</h2>
-      <p>Studies show that regular digital detoxes can improve sleep quality, reduce anxiety, enhance face-to-face relationships, and boost creativity and focus. Even a short break from screens can reset your relationship with technology.</p>
-      
-      <h2>How to Do a Digital Detox</h2>
-      <p>Start small with screen-free evenings or weekend mornings. Set clear boundaries by turning off notifications, keeping devices out of the bedroom, and using apps that monitor and limit your screen time.</p>
-      
-      <h2>What to Do Instead</h2>
-      <p>Rediscover offline activities: read physical books, practice mindfulness or meditation, spend time in nature, engage in creative hobbies, or simply connect with loved ones without the distraction of screens.</p>
-      
-      <h2>Conclusion</h2>
-      <p>Technology should enhance our lives, not control them. By consciously stepping away from our devices regularly, we can maintain a healthier relationship with technology while improving our overall wellbeing.</p>
-    `,
-        author: {
-            name: "Aarav Patel",
-            avatar: "/avatars/aarav.jpg"
-        },
-        date: "January 15, 2025",
-        readTime: "3 min read",
-        image: "/images/mai.png",
-        tags: ["Mental Health", "Technology", "Wellbeing"],
-        category: "Health"
-    },
-    {
-        id: 5,
-        title: "The Rise of Virtual Tourism: Exploring the World from Home",
-        excerpt: "With VR technology becoming more sophisticated, virtual tourism is offering new ways to experience destinations without the carbon footprint.",
-        content: `
-      <h2>What is Virtual Tourism?</h2>
-      <p>Virtual tourism uses technologies like VR, AR, and 360° videos to let you explore destinations around the world from your home. These immersive experiences go beyond traditional photos or videos, creating the sensation of actually being there.</p>
-      
-      <h2>Technological Advancements</h2>
-      <p>The latest VR headsets offer stunning visual quality and spatial audio that trick your brain into feeling physically present in virtual environments. Haptic feedback systems are even beginning to simulate textures and temperatures.</p>
-      
-      <h2>Popular Virtual Destinations</h2>
-      <p>From walking the Great Wall of China to diving in the Great Barrier Reef or touring the Louvre, virtual tourism platforms now offer thousands of experiences. Some even include local guides who interact with you in real-time.</p>
-      
-      <h2>Environmental Impact</h2>
-      <p>While nothing replaces the authentic experience of travel, virtual tourism offers a way to explore with zero carbon emissions. It's also making travel more accessible to those with physical limitations or financial constraints.</p>
-      
-      <h2>The Future of Travel</h2>
-      <p>Rather than replacing physical travel, virtual tourism is becoming a complementary experience—people "pre-visit" destinations virtually to plan actual trips, or revisit favorite places without leaving home.</p>
-      
-      <h2>Conclusion</h2>
-      <p>As the technology continues to improve, virtual tourism will become an increasingly important part of how we experience the world, offering sustainable alternatives while making global exploration more accessible to everyone.</p>
-    `,
-        author: {
-            name: "Maya Singh",
-            avatar: "/avatars/maya.jpg"
-        },
-        date: "January 28, 2025",
-        readTime: "4 min read",
-        image: "/images/mai.png",
-        videoUrl: "https://example.com/videos/virtual-tourism-demo.mp4",
-        tags: ["Travel", "Technology", "VR", "Sustainability"],
-        category: "Travel"
-    }
-];
-
 const BlogPage: React.FC = () => {
-    const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [blogPosts, setblogPost] = useState<BlogPost[]>([]);
+  const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = 6;
 
-    const openBlogPost = (post: BlogPost) => {
-        setSelectedPost(post);
-        setIsModalOpen(true);
+  const handlePrevPage = () => {
+    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
+  };
+
+  useEffect(() => {
+    const fetchBlogPosts = async () => {
+      try {
+        const data = await getBlogs();
+        console.log(data);
+        setblogPost(data.blogs);
+        setFilteredPosts(data.blogs);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching blog posts:", error);
+      }
     };
+    fetchBlogPosts();
+  }, []);
+  // Get all unique tags
+  const allTags = Array.from(new Set(blogPosts.flatMap((post) => post.tags)));
 
-    return (
-        <div className="bg-white min-h-screen pt-24">
-            <div className="container mx-auto px-12 py-12">
-                <header className="mb-16 text-center">
-                    <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-black">
-                        Our Blog
-                    </h1>
-                    <p className="text-gray-600 text-lg md:text-xl max-w-2xl mx-auto">
-                        Discover the latest trends, insights, and stories from our experts
+  // Filter posts based on search query and active tags
+  useEffect(() => {
+    let result = blogPosts;
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(
+        (post: BlogPost) =>
+          post.title.toLowerCase().includes(query) ||
+          post.excerpt.toLowerCase().includes(query) ||
+          post.tags.some((tag) => tag.toLowerCase().includes(query)) ||
+          post.category.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply tag filters
+    if (activeFilters.length > 0) {
+      result = result.filter((post) =>
+        activeFilters.some((filter) => post.tags.includes(filter))
+      );
+    }
+
+    setFilteredPosts(result);
+  }, [searchQuery, activeFilters]);
+
+  const openBlogPost = (post: BlogPost) => {
+    setSelectedPost(post);
+    setIsModalOpen(true);
+  };
+
+  const toggleFilter = (tag: string) => {
+    setActiveFilters((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const sharePost = () => {
+    if (selectedPost && navigator.share) {
+      navigator
+        .share({
+          title: selectedPost.title,
+          text: selectedPost.excerpt,
+          url: window.location.href,
+        })
+        .then(() => console.log("Successful share"))
+        .catch((error) => console.log("Error sharing", error));
+    } else {
+      setShareDialogOpen(true);
+    }
+  };
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setTimeout(() => setShareDialogOpen(false), 500);
+  };
+  if (loading) {
+    return <Loading />;
+  }
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  return (
+    <div className="bg-white min-h-screen">
+      {/* Hero Section with Glass Effect */}
+      <div className="relative h-96 overflow-hidden flex items-center justify-center">
+        <div className="absolute inset-0 bg-gradient-to-r from-black to-black/80 z-0"></div>
+        <div className="absolute inset-0 bg-[url('/images/mai.png')] bg-cover bg-center opacity-40 z-0"></div>
+        <div className="container mx-auto px-4 relative z-10 text-center">
+          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-4 text-white">
+            <span className="relative">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
+                The Blog
+              </span>
+              <span className="absolute -bottom-2 left-0 w-1/2 h-1 bg-white rounded-full"></span>
+            </span>
+          </h1>
+          <p className="text-white/90 text-lg md:text-xl max-w-2xl mx-auto my-6">
+            Discover insights, trends, and stories from our experts across
+            technology, lifestyle, health, and sustainability.
+          </p>
+
+          {/* Search Bar with Glass Effect */}
+          <div className="relative max-w-xl mx-auto mt-8">
+            <div className="backdrop-blur-md bg-white/20 rounded-full flex items-center p-1 pl-4 border border-white/30">
+              <Search className="h-5 w-5 text-white/80" />
+              <Input
+                type="text"
+                placeholder="Search articles..."
+                className="w-full bg-transparent border-none ring-0 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-white placeholder:text-white/70"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Curved Bottom */}
+        <div className="absolute -bottom-12 left-0 right-0 h-24 bg-white rounded-t-[50%]"></div>
+      </div>
+
+      {/* Filters Section */}
+      <div className="container mx-auto px-4 pt-16 pb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            Latest Articles
+          </h2>
+
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:border-gray-400 hover:bg-gray-50 px-4 py-2 rounded-full transition-all"
+          >
+            <span>Filter by tags</span>
+            <ChevronDown
+              className={`h-4 w-4 transition-transform duration-300 ${
+                showFilters ? "rotate-180" : "rotate-0"
+              }`}
+            />
+          </button>
+        </div>
+
+        {/* Tag Filters */}
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden mb-6"
+            >
+              <div className="flex flex-wrap gap-2 py-4">
+                {allTags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => toggleFilter(tag)}
+                    className={`px-3 py-1 rounded-full text-sm font-medium transition-all ${
+                      activeFilters.includes(tag)
+                        ? "bg-black text-white"
+                        : "bg-black/5 text-black hover:bg-black/10"
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+                {activeFilters.length > 0 && (
+                  <button
+                    onClick={() => setActiveFilters([])}
+                    className="px-3 py-1 rounded-full text-sm font-medium bg-red-50 text-red-500 hover:bg-red-100 transition-all"
+                  >
+                    Clear All
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Blog Posts Grid */}
+      <div className="container mx-auto px-4 pb-24">
+        {filteredPosts.length === 0 ? (
+          <div className="text-center py-16">
+            <h3 className="text-xl font-medium text-gray-600">
+              No articles found matching your search.
+            </h3>
+            <p className="mt-2 text-gray-500">
+              Try adjusting your search terms or filters.
+            </p>
+            <Button
+              onClick={() => {
+                setSearchQuery("");
+                setActiveFilters([]);
+              }}
+              className="mt-4 bg-black text-white hover:bg-black/80"
+            >
+              Reset All Filters
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredPosts.map((post) => (
+              <motion.article
+                key={post.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="group"
+              >
+                <div className="backdrop-blur-sm bg-white shadow-lg hover:shadow-xl rounded-2xl overflow-hidden border border-black/5 transition-all duration-300 flex flex-col h-full">
+                  <div className="relative h-52 overflow-hidden">
+                    <img
+                      src={post.image || "/placeholder.png"}
+                      alt={post.title}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <Badge className="absolute top-4 left-4 bg-black/70 backdrop-blur-md text-white border-none">
+                      {post.category}
+                    </Badge>
+                  </div>
+
+                  <div className="p-6 flex-grow flex flex-col">
+                    <div className="flex items-center text-sm text-gray-500 mb-3 space-x-4">
+                      <div className="flex items-center">
+                        <Calendar className="h-4 w-4 mr-1" />
+                        <span>
+                          {formatDate(post.createdAt.toLocaleDateString())}
+                        </span>
+                      </div>
+                      <div className="flex items-center">
+                        <Clock className="h-4 w-4 mr-1" />
+                        <span>{post.readTime}</span>
+                      </div>
+                    </div>
+
+                    <h2 className="text-xl font-bold mb-3 group-hover:text-gray-700 transition-colors line-clamp-2">
+                      {post.title}
+                    </h2>
+
+                    <p className="text-gray-600 mb-4 line-clamp-3">
+                      {post.excerpt}
                     </p>
-                </header>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 px-16 gap-8">
-                    {blogPosts.map((post) => (
-                        <article
-                            key={post.id}
-                            className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col border border-gray-200"
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {post.tags.slice(0, 3).map((tag) => (
+                        <span
+                          key={tag}
+                          className="text-xs bg-black/5 px-2 py-1 rounded-full"
                         >
-                            <div className="relative h-60 overflow-hidden">
-                                <img
-                                    src={post.image || "/placeholder.png"}
-                                    alt={post.title}
-                                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                                />
-                                <Badge className="absolute top-4 left-4 bg-black text-white font-medium border-none">
-                                    {post.category}
-                                </Badge>
-                            </div>
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
 
-                            <div className="p-6 flex-grow flex flex-col">
-                                <div className="flex items-center text-sm text-gray-500 mb-3 space-x-4">
-                                    <div className="flex items-center">
-                                        <Calendar className="h-4 w-4 mr-1" />
-                                        <span>{post.date}</span>
-                                    </div>
-                                    <div className="flex items-center">
-                                        <Clock className="h-4 w-4 mr-1" />
-                                        <span>{post.readTime}</span>
-                                    </div>
-                                </div>
+                    <div className="mt-auto">
+                      <div className="flex items-center mb-4">
+                        <Avatar className="h-8 w-8 mr-2 border border-black/10">
+                          <AvatarFallback className="bg-black text-white">
+                            {post.authorName.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm font-medium">
+                          {post.authorName}
+                        </span>
+                      </div>
 
-                                <h2 className="text-xl font-bold mb-3 hover:text-gray-700 transition-colors line-clamp-2">
-                                    {post.title}
-                                </h2>
+                      <Button
+                        onClick={() => openBlogPost(post)}
+                        className="w-full bg-white hover:bg-black hover:text-white text-black border border-black transition-all duration-300 relative overflow-hidden group"
+                      >
+                        <span className="relative z-10">Read Article</span>
+                        <span className="absolute inset-0 w-0 bg-black group-hover:w-full transition-all duration-300 ease-out -z-10"></span>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </motion.article>
+            ))}
+          </div>
+        )}
 
-                                <p className="text-gray-600 mb-4 line-clamp-3">{post.excerpt}</p>
+        {/* Pagination */}
+        {filteredPosts.length > 0 && (
+          <div className="flex justify-center mt-12">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Button
+                variant="outline"
+                size="icon"
+                className="rounded-full"
+                aria-label="Previous page"
+                onClick={handlePrevPage}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              {[1, 2, 3].map((page) => (
+                <Button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  variant="outline"
+                  className={`rounded-full transition-all ${
+                    currentPage === page
+                      ? "bg-black text-white hover:bg-black/90"
+                      : "hover:bg-black hover:text-white"
+                  }`}
+                >
+                  {page}
+                </Button>
+              ))}
+              <span className="px-1 sm:px-2 text-gray-500">...</span>
+              {/* Last Page */}
+              <Button
+                onClick={() => setCurrentPage(totalPages)}
+                variant="outline"
+                className={`rounded-full transition-all ${
+                  currentPage === totalPages
+                    ? "bg-black text-white hover:bg-black/90"
+                    : "hover:bg-black hover:text-white"
+                }`}
+              >
+                {totalPages}
+              </Button>
+              {/* Next */}
+              <Button
+                variant="outline"
+                size="icon"
+                className="rounded-full"
+                aria-label="Next page"
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+      {/* Blog Post Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white p-0 rounded-xl border border-black/10">
+          {selectedPost && (
+            <>
+              <div className="sticky top-0 bg-white z-10 p-4 border-b flex justify-between items-center">
+                <div className="flex items-center space-x-4">
+                  <Avatar className="h-10 w-10 border border-black/10">
+                    <AvatarFallback className="bg-black text-white">
+                      {selectedPost.authorName.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="font-medium">{selectedPost.authorName}</h3>
+                    <div className="flex items-center text-sm text-gray-500">
+                      <Calendar className="h-4 w-4 mr-1" />
+                      <span className="mr-2">
+                        {formatDate(
+                          selectedPost.createdAt.toLocaleDateString()
+                        )}
+                      </span>
+                      <Clock className="h-4 w-4 mr-1" />
+                      <span>{selectedPost.readTime}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full"
+                    onClick={sharePost}
+                  >
+                    <Share className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full"
+                    onClick={() => setIsModalOpen(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
 
-                                <div className="mt-auto">
-                                    <div className="flex items-center mb-4">
-                                        <Avatar className="h-8 w-8 mr-2">
-                                            <AvatarImage src={post.author.avatar} />
-                                            <AvatarFallback>{post.author.name.charAt(0)}</AvatarFallback>
-                                        </Avatar>
-                                        <span className="text-sm font-medium">{post.author.name}</span>
-                                    </div>
+              <div className="p-6 space-y-6">
+                <h1 className="text-2xl md:text-3xl font-bold">
+                  {selectedPost.title}
+                </h1>
 
-                                    <Button
-                                        onClick={() => openBlogPost(post)}
-                                        className="w-full bg-black hover:bg-gray-800 text-white transition-all duration-300"
-                                    >
-                                        Read More
-                                    </Button>
-                                </div>
-                            </div>
-                        </article>
-                    ))}
+                <div className="flex flex-wrap gap-2">
+                  {selectedPost.tags.map((tag) => (
+                    <Badge
+                      key={tag}
+                      variant="outline"
+                      className="bg-black/5 text-black border-none"
+                    >
+                      {tag}
+                    </Badge>
+                  ))}
                 </div>
 
-                {/* Blog Post Modal */}
-                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white p-0 rounded-lg">
-                        {selectedPost && (
-                            <>
-                                <DialogHeader className="sticky top-0 bg-white z-10 p-4 border-b flex justify-between items-center">
-                                    <div className="flex-1">
-                                        <DialogTitle className="sr-only">Blog Post: {selectedPost.title}</DialogTitle>
-                                        <div className="flex items-center space-x-4">
-                                            <Avatar className="h-10 w-10">
-                                                <AvatarImage src={selectedPost.author.avatar} />
-                                                <AvatarFallback>{selectedPost.author.name.charAt(0)}</AvatarFallback>
-                                            </Avatar>
-                                            <div>
-                                                <h3 className="font-medium">{selectedPost.author.name}</h3>
-                                                <div className="flex items-center text-sm text-gray-500">
-                                                    <Calendar className="h-4 w-4 mr-1" />
-                                                    <span className="mr-2">{selectedPost.date}</span>
-                                                    <Clock className="h-4 w-4 mr-1" />
-                                                    <span>{selectedPost.readTime}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="rounded-full"
-                                        onClick={() => setIsModalOpen(false)}
-                                    >
-                                        <X className="h-4 w-4" />
-                                    </Button>
-                                </DialogHeader>
+                <div className="aspect-video rounded-lg overflow-hidden">
+                  <img
+                    src={selectedPost.image}
+                    alt={selectedPost.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div
+                  className="prose prose-lg max-w-none prose-headings:font-bold prose-p:text-gray-700"
+                  dangerouslySetInnerHTML={{ __html: selectedPost.content }}
+                />
 
-                                <div className="p-6 space-y-6">
-                                    <h1 className="text-2xl md:text-3xl font-bold">{selectedPost.title}</h1>
+                <div className="bg-black/5 backdrop-blur-sm rounded-xl p-6">
+                  <h3 className="font-semibold mb-3">About the author</h3>
+                  <div className="flex items-center space-x-3 mb-3">
+                    <Avatar className="h-12 w-12 border border-black/10">
+                      <AvatarFallback className="bg-black text-white">
+                        {selectedPost.authorName.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium">
+                      {selectedPost.authorName}
+                    </span>
+                  </div>
+                  <p className="text-gray-600">{selectedPost.authorBio}</p>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
-                                    <div className="flex flex-wrap gap-2">
-                                        {selectedPost.tags.map((tag) => (
-                                            <Badge key={tag} variant="outline" className="bg-gray-100 text-gray-700">
-                                                {tag}
-                                            </Badge>
-                                        ))}
-                                    </div>
-
-                                    {selectedPost.videoUrl ? (
-                                        <div className="aspect-video rounded-lg overflow-hidden">
-                                            <video
-                                                src={selectedPost.videoUrl}
-                                                controls
-                                                className="w-full h-full object-cover"
-                                                poster={selectedPost.image}
-                                            />
-                                        </div>
-                                    ) : (
-                                        <div className="aspect-video rounded-lg overflow-hidden">
-                                            <img
-                                                src={selectedPost.image}
-                                                alt={selectedPost.title}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        </div>
-                                    )}
-
-                                    <div
-                                        className="prose prose-lg max-w-none"
-                                        dangerouslySetInnerHTML={{ __html: selectedPost.content }}
-                                    />
-
-                                    <div className="bg-gray-50 rounded-lg p-4">
-                                        <h3 className="font-semibold mb-3">About the author</h3>
-                                        <div className="flex items-center space-x-3 mb-3">
-                                            <Avatar className="h-10 w-10">
-                                                <AvatarImage src={selectedPost.author.avatar} />
-                                                <AvatarFallback>{selectedPost.author.name.charAt(0)}</AvatarFallback>
-                                            </Avatar>
-                                            <span className="font-medium">{selectedPost.author.name}</span>
-                                        </div>
-                                        <p className="text-sm text-gray-600">
-                                            Expert in {selectedPost.category.toLowerCase()} with over 5 years of experience writing about {selectedPost.tags.join(", ").toLowerCase()}.
-                                        </p>
-                                    </div>
-                                </div>
-                            </>
-                        )}
-                    </DialogContent>
-                </Dialog>
-            </div>
-        </div>
-    );
+      {/* Share Dialog */}
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogContent className="max-w-sm bg-white rounded-xl border border-black/10 p-6">
+          <h3 className="text-lg font-medium mb-4">Share this article</h3>
+          <div className="flex justify-center space-x-4 mb-6">
+            <Button
+              variant="outline"
+              size="icon"
+              className="rounded-full h-12 w-12"
+            >
+              <Facebook className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="rounded-full h-12 w-12"
+            >
+              <Twitter className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="rounded-full h-12 w-12"
+            >
+              <Linkedin className="h-5 w-5" />
+            </Button>
+          </div>
+          <div className="relative">
+            <Input
+              readOnly
+              value={window.location.href}
+              className="pr-16 bg-gray-50 border-gray-200"
+            />
+            <Button
+              onClick={copyLink}
+              variant="default"
+              size="sm"
+              className="absolute right-1 top-1 h-8 bg-black text-white hover:bg-black/80"
+            >
+              <LinkIcon className="h-4 w-4 mr-1" />
+              Copy
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 };
 
 export default BlogPage;

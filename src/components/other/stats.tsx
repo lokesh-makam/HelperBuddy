@@ -3,93 +3,128 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useInView } from "react-intersection-observer";
-
-const stats = [
-    { value: 5000, label: "Revenue", prefix: "$" },
-    { value: 10, label: "Products", prefix: "" },
-    { value: 150, label: "Components", prefix: "$" },
-    { value: 10, label: "Employees", prefix: "" },
-];
-
-const formatNumber = (num: number) => {
-    return num >= 1000 ? `${(num / 1000).toFixed(0)}K` : num.toString();
+import { Handshake, Smile, ListChecks, Truck } from "lucide-react";
+import { getStats } from "@/src/actions/user";
+import Loading from "@/src/app/loading";
+const iconMap = {
+  handshake: <Handshake className="w-6 h-6 text-blue-600" />,
+  smile: <Smile className="w-6 h-6 text-emerald-600" />,
+  listChecks: <ListChecks className="w-6 h-6 text-purple-600" />,
+  truck: <Truck className="w-6 h-6 text-amber-600" />,
 };
 
-const Counter = ({ value, prefix, startCounting }: { value: number; prefix: string; startCounting: boolean }) => {
-    const [count, setCount] = useState(0);
+const Counter = ({
+  value,
+  label,
+  description,
+  icon,
+  color,
+  startCounting,
+}: {
+  value: number;
+  label: string;
+  description: string;
+  icon: React.ReactNode;
+  color: string;
+  startCounting: boolean;
+}) => {
+  const [count, setCount] = useState(0);
 
-    useEffect(() => {
-        if (!startCounting) return; // Start counting only when in view
+  useEffect(() => {
+    if (!startCounting) return;
 
-        let start = 0;
-        const end = value;
-        const duration = 1000; // 2 seconds duration
-        const intervalTime = 20;
-        const increment = (end - start) / (duration / intervalTime);
+    let start = 0;
+    const end = value;
+    const duration = 1500;
+    const intervalTime = 20;
+    const increment = (end - start) / (duration / intervalTime);
 
-        const timer = setInterval(() => {
-            start += increment;
-            if (start >= end) {
-                clearInterval(timer);
-                start = end;
-            }
-            setCount(Math.round(start));
-        }, intervalTime);
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= end) {
+        clearInterval(timer);
+        start = end;
+      }
+      setCount(Math.round(start));
+    }, intervalTime);
 
-        return () => clearInterval(timer);
-    }, [startCounting, value]);
+    return () => clearInterval(timer);
+  }, [startCounting, value]);
 
-    return (
-        <motion.span
-            className="text-3xl md:text-4xl font-extrabold text-blue-500"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
-        >
-            {prefix}{formatNumber(count)}+
-        </motion.span>
-    );
+  return (
+    <motion.div
+      className="flex flex-col items-center p-8 bg-white/70 backdrop-blur-lg rounded-2xl border border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-300"
+      whileHover={{ y: -5 }}
+    >
+      <div
+        className={`flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br ${color} mb-4`}
+      >
+        {icon}
+      </div>
+      <motion.span
+        className="text-4xl font-bold text-gray-900 mb-2"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        {count}+
+      </motion.span>
+      <h3 className="text-xl font-semibold text-gray-800 mb-1">{label}</h3>
+      <p className="text-sm text-gray-600 text-center">{description}</p>
+    </motion.div>
+  );
 };
 
 export const Stats = () => {
-    const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.5 });
-
-    return (
-        <section
-            ref={ref}
-            className="w-full py-12 md:py-16 bg-[rgb(6,8,20)] text-white text-center px-4"
+  const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.2 });
+  const [loading, setloading] = useState(true);
+  const [stats, setstats] = useState([]);
+  useEffect(() => {
+    const fun = async () => {
+      const data = await getStats();
+      setstats(data);
+      setloading(false);
+    };
+    fun();
+  }, []);
+  if (loading) {
+    return <Loading />;
+  }
+  return (
+    <section
+      ref={ref}
+      className="w-full py-16 md:py-24 bg-gradient-to-br from-gray-50 to-gray-100"
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          className="text-center mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
         >
-            <motion.h2
-                className="text-3xl md:text-4xl font-bold mb-6"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1 }}
-            >
-                Over 8000+ Projects Completed
-            </motion.h2>
-            <motion.p
-                className="text-gray-400 max-w-2xl mx-auto mb-8 text-sm md:text-base"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1.2 }}
-            >
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Iusto provident omnis.
-            </motion.p>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Trust in Numbers
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Become part of our growing community of happy customers who trust us
+            time and again
+          </p>
+        </motion.div>
 
-            <div className="w-full max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4">
-                {stats.map((stat, index) => (
-                    <motion.div
-                        key={index}
-                        className="flex flex-col items-center p-6 bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, delay: index * 0.2 }}
-                    >
-                        <Counter value={stat.value} prefix={stat.prefix} startCounting={inView} />
-                        <p className="text-gray-300 text-base mt-3">{stat.label}</p>
-                    </motion.div>
-                ))}
-            </div>
-        </section>
-    );
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {stats.map((stat, index) => (
+            <Counter
+              key={index}
+              value={stat.value}
+              label={stat.label}
+              description={stat.description}
+              icon={iconMap[stat.icon as keyof typeof iconMap]}
+              color={stat.color}
+              startCounting={inView}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
 };

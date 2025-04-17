@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Star, X, ShoppingCart, Clock, Calendar, CheckCircle } from "lucide-react";
+import React, {useEffect, useState} from "react";
+import {Star, X, ShoppingCart, Clock, Calendar, CheckCircle, Minus, ShoppingBag, Trash, Plus} from "lucide-react";
 import { useBoundStore } from "@/src/store/store";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/src/components/ui/dialog";
 import { Button } from "@/src/components/ui/button";
@@ -7,87 +7,112 @@ import { Badge } from "@/src/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/src/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
 import { useToast } from "@/src/hooks/use-toast";
-
-// Mock review data that will be used until backend data is ready
-const mockReviews = [
-    {
-        id: 1,
-        userName: "Rohit S.",
-        userAvatar: null,
-        rating: 5,
-        date: "3 days ago",
-        comment: "Excellent service! Exactly what I needed and delivered on time."
-    },
-    {
-        id: 2,
-        userName: "Priya M.",
-        userAvatar: null,
-        rating: 4,
-        date: "1 week ago",
-        comment: "Very good service. Would recommend, but took slightly longer than expected."
-    },
-    {
-        id: 3,
-        userName: "Ankit G.",
-        userAvatar: null,
-        rating: 5,
-        date: "2 weeks ago",
-        comment: "High quality work. The provider was very professional and accommodating to my requests."
-    },
-    {
-        id: 4,
-        userName: "Divya K.",
-        userAvatar: null,
-        rating: 3,
-        date: "1 month ago",
-        comment: "Service was decent. Some improvements could be made but overall satisfied."
-    }
-];
-
+import {getReviewsByServiceId} from "@/src/actions/admin";
+import Loading from "@/src/app/loading";
+import {useRouter} from "next/navigation";
 // Updated ServiceCard with fixed issues
+// ✅ Service Interface (from Prisma model)
+interface Service {
+    id: string;
+    name: string;
+    description?: string;
+    category: string;
+    basePrice: number;
+    estimatedTime?: string;
+    rating: number;
+    includes?: string;
+    imageUrl?: string;
+}
+
 const ServiceCard: React.FC<any> = ({ service }) => {
-    const { cart, addToCart, removeFromCart } = useBoundStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const isInCart = cart.some((item: { id: any }) => item.id === service.id);
-    const { toast } = useToast();
-    // Enrich service with mock reviews if it doesn't have any
+    const [loading, setLoading] = useState(true);
+    const [reviews, setreviews] = useState<any>([]);
+    const cart = useBoundStore((state) => state.cart);
+    const addToCart = useBoundStore((state) => state.addToCart);
+    const removeFromCart = useBoundStore((state) => state.removeFromCart);
+    const [avgrating, setavgrating] = useState(0);
+    const [activeButton, setActiveButton] = useState(null);
+    const [itemAdded, setItemAdded] = useState(false);
+    const router=useRouter();
+    const cartItem = cart.find((item) => item.id === service.id);
+    useEffect(() => {
+        if (cartItem && !itemAdded) {
+            setItemAdded(true);
+            setTimeout(() => setItemAdded(false), 300);
+        }
+    }, [cartItem?.quantity]);
+    // Reset animation when cart item changes
+
+    useEffect(() => {
+        async function getreviews() {
+            const reviews = await getReviewsByServiceId(service.id);
+            const data=reviews?.data?.filter((item: any) => item.status == "true");
+            const totalRating = data?.reduce((acc: number, review: any) => acc + review.rating, 0)||0;
+            const averageRating = totalRating / (data?.length||1);
+            if(reviews?.success){
+                setLoading(false);
+                setreviews(data);
+                setavgrating(averageRating);
+            }
+        }
+        getreviews();
+    }, []);
+    if(loading){
+        return <Loading/>
+    }
     const enrichedService = {
         ...service,
-        reviews: service.reviews?.length > 0 ? service.reviews : mockReviews,
-        rating: service.rating || 4.5,
-        duration: service.duration || "1 hour",
+        reviews: reviews,
+        rating: avgrating,
+        duration: service.duration,
         availableDate: service.availableDate || "Today",
-        includes: service.includes || ["Standard package", "Basic support", "One revision"]
+        includes: service?.includes?.split(",") || ["Standard package", "Basic support", "One revision"]
     };
 
-    const handleAddToCart = (e: React.MouseEvent) => {
-        e.stopPropagation(); // Prevent opening modal when clicking the button
 
-        if (!isInCart) {
-            addToCart(enrichedService);
-            toast({
-                title: "Added to cart!",
-                description: `${enrichedService.name} has been added to your cart`,
-                variant: "default",
-            });
-        } else {
-            removeFromCart(enrichedService.id);
-            toast({
-                title: "Removed from cart",
-                description: `${enrichedService.name} has been removed from your cart`,
-                variant: "destructive",
-            });
+
+
+    const handleButtonPress = (button:any) => {
+        setActiveButton(button);
+        setTimeout(() => setActiveButton(null), 150);
+    };
+// ✅ Increase quantity of a service (or add if not in cart)
+    const increaseQuantity = (service: Service) => {
+        addToCart(service);
+    };
+
+// ✅ Decrease quantity or remove if quantity becomes 0
+    const decreaseQuantity = (serviceId: string) => {
+        removeFromCart(serviceId);
+    };
+
+// ✅ Completely remove item regardless of quantity (more efficient way)
+    const removeItemCompletely = (serviceId: string) => {
+        const item = cart.find((item) => item.id === serviceId);
+        if (item) {
+            // Directly filter out the item in one shot instead of looping
+            const updatedCart = cart.filter((i) => i.id !== serviceId);
+            useBoundStore.setState({ cart: updatedCart });
         }
     };
 
-    const handleCheckCart = (e: React.MouseEvent) => {
-        e.stopPropagation();
+
+    const handleCheckCart = () => {
+        // e.stopPropagation();
         // Navigate to cart page - you'll need to implement this according to your routing setup
         // For example: router.push('/cart') if using Next.js
         console.log("Navigate to cart page");
         setIsModalOpen(false);
+        router.push("/services/checkout")
     };
-
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+        });
+    };
     return (
         <>
             <div
@@ -228,11 +253,11 @@ const ServiceCard: React.FC<any> = ({ service }) => {
                                                     <Avatar className="h-8 w-8">
                                                         <AvatarImage src={review.userAvatar} />
                                                         <AvatarFallback>
-                                                            {review.userName?.charAt(0) || "U"}
+                                                            {review.serviceRequest.user.firstName?.charAt(0).toUpperCase() || "U"}
                                                         </AvatarFallback>
                                                     </Avatar>
                                                     <div>
-                                                        <h4 className="font-medium">{review.userName}</h4>
+                                                        <h4 className="font-medium">{review.serviceRequest.user.firstName} {review.serviceRequest.user.lastName}</h4>
                                                         <div className="flex items-center">
                                                             {Array.from({ length: 5 }).map((_, idx) => (
                                                                 <Star
@@ -245,12 +270,12 @@ const ServiceCard: React.FC<any> = ({ service }) => {
                                                                 />
                                                             ))}
                                                             <span className="text-xs text-gray-500 ml-2">
-                                {review.date}
+                                {formatDate(review.createdAt.toLocaleDateString())}
                               </span>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <p className="text-gray-700 text-sm">{review.comment}</p>
+                                                <p className="text-gray-700 px-4 text-md">{review.review}</p>
                                             </div>
                                         ))
                                     ) : (
@@ -260,32 +285,80 @@ const ServiceCard: React.FC<any> = ({ service }) => {
                             </TabsContent>
                         </Tabs>
 
-                        {isInCart ? (
-                            <div className="flex flex-col sm:flex-row gap-3">
-                                <Button
-                                    className="flex-1 bg-black hover:bg-gray-800 text-white font-medium py-3"
-                                    onClick={handleCheckCart}
-                                >
-                                    <ShoppingCart className="h-5 w-5 mr-2" />
-                                    Check Cart
-                                </Button>
-                                <Button
-                                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-3"
-                                    onClick={handleAddToCart}
-                                >
-                                    <X className="h-5 w-5 mr-2" />
-                                    Remove from Cart
-                                </Button>
+                        {cartItem ? (
+                            <div
+                                className={`flex flex-col gap-6 transition-all duration-300 ${itemAdded ? 'scale-[1.02]' : 'scale-100'}`}>
+                                {/* Quantity Controls - Improved with better visual hierarchy */}
+                                <div className="flex items-center justify-center gap-5">
+                                    <button
+                                        className={`bg-gray-100 hover:bg-gray-200 text-gray-800 w-10 h-10 rounded-full flex items-center justify-center shadow-sm transition-all duration-300 ${activeButton === 'decrease' ? 'bg-gray-300 scale-95' : ''}`}
+                                        onClick={() => {
+                                            handleButtonPress('decrease');
+                                            decreaseQuantity(cartItem.id);
+                                        }}
+                                        aria-label="Decrease quantity"
+                                    >
+                                        <Minus className="h-6 w-6" strokeWidth={2}/>
+                                    </button>
+
+                                    <div
+                                        className="bg-white border border-gray-200 rounded-2xl px-6 py-3 min-w-10 shadow-sm">
+                                        <span
+                                            className="text-1xl font-bold text-center block">{cartItem.quantity}</span>
+                                    </div>
+
+                                    <button
+                                        className={`bg-gray-100 hover:bg-gray-200 text-gray-800 w-10 h-10 rounded-full flex items-center justify-center shadow-sm transition-all duration-300 ${activeButton === 'increase' ? 'bg-gray-300 scale-95' : ''}`}
+                                        onClick={() => {
+                                            handleButtonPress('increase');
+                                            increaseQuantity(cartItem);
+                                        }}
+                                        aria-label="Increase quantity"
+                                    >
+                                        <Plus className="h-6 w-6" strokeWidth={2}/>
+                                    </button>
+                                </div>
+
+                                {/* Action Buttons - Improved with better spacing and visual design */}
+                                <div className="flex flex-row gap-x-3">
+                                    <button
+                                        className={`w-1/2 bg-black hover:bg-gray-800 text-white font-semibold py-3 px-3 rounded-xl flex items-center justify-center shadow-sm transition-all duration-300 ${activeButton === 'cart' ? 'bg-gray-800 scale-[0.98]' : ''}`}
+                                        onClick={() => {
+                                            handleButtonPress('cart');
+                                            handleCheckCart();
+                                        }}
+                                    >
+                                        <ShoppingBag className="h-5 w-5 mr-3"/>
+                                        View Cart
+                                    </button>
+
+                                    <button
+                                        className={`w-1/2 bg-white border border-red-500 text-red-500 hover:bg-red-50 font-semibold py-3 px-3 rounded-xl flex items-center justify-center shadow-sm transition-all duration-300 ${activeButton === 'remove' ? 'bg-red-50 scale-[0.98]' : ''}`}
+                                        onClick={() => {
+                                            handleButtonPress('remove');
+                                            removeItemCompletely(cartItem.id);
+                                        }}
+                                    >
+                                        <Trash className="h-5 w-5 mr-3"/>
+                                        Remove All
+                                    </button>
+                                </div>
+
                             </div>
                         ) : (
-                            <Button
-                                className="w-full bg-black hover:bg-gray-800 text-white font-medium py-3"
-                                onClick={handleAddToCart}
+                            <button
+                                className={`w-full bg-black hover:bg-gray-800 text-white font-semibold py-3 px-3 rounded-xl flex items-center justify-center shadow-sm transition-all duration-300 ${activeButton === 'add' ? 'bg-gray-800 scale-[0.98]' : ''}`}
+                                onClick={() => {
+                                    handleButtonPress('add');
+                                    increaseQuantity(service);
+                                }}
                             >
-                                <ShoppingCart className="h-5 w-5 mr-2" />
+                                <ShoppingCart className="h-5 w-5 mr-3"/>
                                 Add to Cart
-                            </Button>
+                            </button>
                         )}
+
+
                     </div>
                 </DialogContent>
             </Dialog>

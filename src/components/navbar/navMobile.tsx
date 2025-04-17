@@ -1,14 +1,12 @@
 import Link from "next/link";
 import { cn } from "@/src/lib/utils";
-import {Logo} from "@/src/components/assets/logo";
+import { Logo } from "@/src/components/assets/logo";
 import {
     CloseIcon,
-    FacebookIcon,
-    InstagramIcon,
-    SearchIcon,
-    YoutubeIcon,
 } from "@/src/components/assets/svg";
-import {Button} from "@/src/components/ui/button";
+import { Button } from "@/src/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
+import { useUser } from "@clerk/nextjs";
 
 const links = [
     {
@@ -18,7 +16,7 @@ const links = [
     },
     {
         id: "service",
-        path: "/service",
+        path: "/services",
         name: "Services",
     },
     {
@@ -31,14 +29,21 @@ const links = [
         path: "/contact",
         name: "Contact Us",
     },
+    {
+        id: "service-partner",
+        path: "/provider",
+        name: "Service Partner",
+    },
 ];
 
 interface NavMobileProps {
     onClick: () => void;
-    open: boolean; // Add textColor prop
+    open: boolean;
 }
 
 export default function NavMobile({ onClick, open }: NavMobileProps) {
+    const { isSignedIn, user } = useUser();
+
     return (
         <div
             className={cn(
@@ -57,30 +62,25 @@ export default function NavMobile({ onClick, open }: NavMobileProps) {
                         </button>
                     </div>
 
-                    {/* search input */}
-                    <div className="flex h-12 items-center gap-2 rounded-md border border-[#6C7275] px-4">
-                        <label htmlFor="search" className="cursor-pointer">
-                            <SearchIcon />
-                        </label>
-                        <input
-                            id="search"
-                            name="search"
-                            className="font-inter text-sm font-normal text-[#141718] outline-none placeholder:opacity-70"
-                            placeholder="Search"
-                        />
-                    </div>
-
                     {/* navbar links */}
                     <ul className="grid grid-cols-1">
                         {links.map((link) => (
                             <li
                                 key={link.id}
-                                className="border-b border-[#E8ECEF] first:pt-0"
+                                className={cn(
+                                    "border-b border-[#E8ECEF] first:pt-0",
+                                    link.id === "become-provider" ? "bg-gray-50" : ""
+                                )}
                             >
                                 <Link
                                     href={link.path}
+                                    onClick={onClick}
                                     className={cn(
-                                        "block py-4 font-inter text -black text-sm font-medium")}
+                                        "block py-4 font-inter text-sm font-medium",
+                                        link.id === "become-provider"
+                                            ? "text-primary font-semibold"
+                                            : "text-black"
+                                    )}
                                 >
                                     {link.name}
                                 </Link>
@@ -90,21 +90,25 @@ export default function NavMobile({ onClick, open }: NavMobileProps) {
                 </div>
 
                 {/* bottom section */}
-                <div className="flex flex-col gap-5">
-                    {/* cart & wishlist */}
-
-
-                    {/* login button */}
-                    <Button className="w-full text-lg py-2.5">
-                        Sign In
-                    </Button>
-
-                    {/* social media icons */}
-                    <div className="flex justify-center gap-6"> {/* Center the icons */}
-                        <InstagramIcon className="w-6" />
-                        <FacebookIcon className="w-6" />
-                        <YoutubeIcon className="w-6" />
-                    </div>
+                <div className="flex flex-col gap-5 border-t border-[#E8ECEF] pt-4">
+                    {isSignedIn ? (
+                        <Link href="/profile" className="flex items-center gap-3">
+                            <Avatar>
+                                <AvatarImage src={user?.imageUrl} />
+                                <AvatarFallback>
+                                    {user?.firstName?.charAt(0)}
+                                    {user?.lastName?.charAt(0)}
+                                </AvatarFallback>
+                            </Avatar>
+                            <p className="font-medium">
+                                {user?.firstName} {user?.lastName}
+                            </p>
+                        </Link>
+                    ) : (
+                        <Link href="/sign-in" className="w-full">
+                            <Button className="w-full text-lg py-2.5">Log in</Button>
+                        </Link>
+                    )}
                 </div>
             </div>
 

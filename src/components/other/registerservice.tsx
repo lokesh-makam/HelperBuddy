@@ -27,6 +27,7 @@ export default function ServiceForm({ onClose }: ServiceFormProps) {
         category: "",
         basePrice: "",
         estimatedTime: "",
+        includes: ""
     });
 
     const [image, setImage] = useState<File | null>(null);
@@ -83,6 +84,7 @@ export default function ServiceForm({ onClose }: ServiceFormProps) {
             category: "",
             basePrice: "",
             estimatedTime: "",
+            includes: ""
         });
         setImage(null);
         setPreview(null);
@@ -92,7 +94,7 @@ export default function ServiceForm({ onClose }: ServiceFormProps) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!form.name || !form.category || !form.basePrice || !image) {
+        if (!form.name || !form.category || !form.basePrice || !image|| !form.includes) {
             return toast.error("Please fill out all required fields!");
         }
 
@@ -147,6 +149,7 @@ export default function ServiceForm({ onClose }: ServiceFormProps) {
                             { id: "description", label: "Description", component: Textarea },
                             { id: "category", label: "Category", type: "text", required: true },
                             { id: "basePrice", label: "Base Price", type: "number", required: true, min: "0" },
+                            { id: "includes", label: "Includes(comma seperated)", type: "text" },
                             { id: "estimatedTime", label: "Estimated Time", type: "text" },
                         ].map(({ id, label, component: Component = Input, ...rest }) => (
                             <div key={id}>

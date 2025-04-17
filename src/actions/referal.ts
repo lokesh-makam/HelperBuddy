@@ -85,13 +85,13 @@ export async function enterReferralCode(userId: string, referralCode: string) {
     }
 }
 
-export const getwallet=async(userId:string)=>{
+export const getwallet= async (userId: string | undefined)=>{
     try {
         const user = await db.user.findUnique({
             where: { id: userId },
             select: { walletBalance: true },
         });
-        return user?.walletBalance || null;
+        return user?.walletBalance;
     } catch (error) {
         console.error("Failed to fetch wallet balance:", error);
         return null;

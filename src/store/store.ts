@@ -1,59 +1,101 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-// ✅ Define Service Interface
+// ✅ Service Interface (from Prisma model)
 interface Service {
-    id: number;
-    name: string;
-    reviews: number;
-    rating: number;
-    description: string;
-    image: string;
-    category: string;
-    basePrice: number;
+  id: string;
+  name: string;
+  description?: string;
+  category: string;
+  basePrice: number;
+  estimatedTime?: string;
+  rating: number;
+  includes?: string;
+  imageUrl?: string;
 }
 
-// ✅ **Service Slice**
+// ✅ Cart Item Interface
+interface CartItem extends Service {
+  quantity: number;
+}
+
+// ✅ Services Slice
 interface ServicesSlice {
-    services: Service[];
-    setServices: (services: Service[]) => void;
+  services: Service[];
+  setServices: (services: Service[]) => void;
 }
 
-// ✅ **Cart Slice (Now includes `clearCart`)**
+// ✅ Cart Slice (only 2 main functions)
 interface CartSlice {
-    cart: Service[];
-    addToCart: (service: Service) => void;
-    removeFromCart: (id: number) => void;
-    clearCart: () => void;  // ✅ Added `clearCart` inside CartSlice
+  cart: CartItem[];
+  addToCart: (service: Service) => void;
+  removeFromCart: (id: string) => void;
+  deleteFromCart: (id: string) => void; // ← add this
+  clearCart: () => void;
 }
 
-// ✅ **Service Slice Implementation**
+// ✅ Services Slice Implementation
 const createServicesSlice = (set: any) => ({
-    services: [],
-    setServices: (services: Service[]) => set({ services }),
+  services: [],
+  setServices: (services: Service[]) => set({ services }),
 });
 
-// ✅ **Cart Slice with Persistence & `clearCart`**
+// ✅ Cart Slice Implementation
 const createCartSlice = persist<CartSlice>(
-    (set) => ({
-        cart: [],
-        addToCart: (service: Service) =>
-            set((state) => ({ cart: [...state.cart, service] })),
-        removeFromCart: (id: number) =>
-            set((state) => ({ cart: state.cart.filter((item) => item.id !== id) })),
-        clearCart: () => set(() => ({ cart: [] })),  // ✅ Integrated `clearCart`
-    }),
-    {
-        name: "cart-storage", // Key for localStorage
-        // @ts-ignore
-        getStorage: () => localStorage, // ✅ Ensures persistence
-    }
+  (set) => ({
+    cart: [],
+    addToCart: (service: Service) =>
+      set((state) => {
+        const existing = state.cart.find((item) => item.id === service.id);
+        if (existing) {
+          return {
+            cart: state.cart.map((item) =>
+              item.id === service.id
+                ? { ...item, quantity: item.quantity + 1 }
+                : item
+            ),
+          };
+        } else {
+          return {
+            cart: [...state.cart, { ...service, quantity: 1 }],
+          };
+        }
+      }),
+    removeFromCart: (id: string) =>
+      set((state) => {
+        const existing = state.cart.find((item) => item.id === id);
+        if (!existing) return state;
+
+        if (existing.quantity === 1) {
+          return {
+            cart: state.cart.filter((item) => item.id !== id),
+          };
+        } else {
+          return {
+            cart: state.cart.map((item) =>
+              item.id === id ? { ...item, quantity: item.quantity - 1 } : item
+            ),
+          };
+        }
+      }),
+    deleteFromCart: (
+      id: string // ← new function here
+    ) =>
+      set((state) => ({
+        cart: state.cart.filter((item) => item.id !== id),
+      })),
+    clearCart: () => set(() => ({ cart: [] })),
+  }),
+  {
+    name: "cart-storage",
+    // @ts-ignore
+    getStorage: () => localStorage,
+  }
 );
 
-// ✅ **Create Zustand Store**
-
+// ✅ Combined Zustand Store
 export const useBoundStore = create<ServicesSlice & CartSlice>()((...a) => ({
-    // @ts-ignore
-    ...createServicesSlice(...a),
-    ...createCartSlice(...a),
+  // @ts-ignore
+  ...createServicesSlice(...a),
+  ...createCartSlice(...a),
 }));

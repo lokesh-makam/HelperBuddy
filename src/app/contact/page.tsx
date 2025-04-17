@@ -1,7 +1,9 @@
-import {Contact} from "@/src/components/other/contact";
+import { Contact } from "@/src/components/other/contact";
 
 export default function ContactUs() {
-    return (<>
-        <Contact/>
-    </>);
+  return (
+    <>
+      <Contact />
+    </>
+  );
 }

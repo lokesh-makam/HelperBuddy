@@ -17,13 +17,14 @@ export async function submitreview({ serviceRequestId, rating, review }: ReviewI
         // Fetch the service request and its service partner
         const serviceRequest = await db.serviceRequest.findUnique({
             where: { id: serviceRequestId },
-            select: { status: true, servicePartnerId: true },
+            select: { status: true, servicePartnerId: true ,serviceId:true},
         });
 
         if (!serviceRequest) {
             return { error: "Service request not found." };
         }
-
+        const res=await db.review.findMany({where:{serviceRequestId:serviceRequestId}});
+        if(res.length>0) return { error: "You have already submitted a review for this service."};
         if (!["Accepted", "completed"].includes(serviceRequest.status)) {
             return { error: "You can only review an accepted or completed service." };
         }
@@ -46,14 +47,25 @@ export async function submitreview({ serviceRequestId, rating, review }: ReviewI
 
             // Calculate new average rating
             const totalRatings = reviews.reduce((sum, r) => sum + r.rating, 0);
-            const averageRating = Math.round(totalRatings / reviews.length);
+            const averageRating = totalRatings / reviews.length;
 
             await db.servicePartner.update({
                 where: { id: serviceRequest.servicePartnerId },
                 data: { rating: averageRating },
             });
         }
-
+        if(serviceRequest.serviceId){
+            const reviews = await db.review.findMany({
+                where: { serviceRequest: { serviceId: serviceRequest.serviceId } },
+                select: { rating: true },
+            });
+            const totalRatings = reviews.reduce((sum, r) => sum + r.rating, 0);
+            const averageRating = Math.round(totalRatings / reviews.length);
+            await db.service.update({
+                where: { id: serviceRequest.serviceId },
+                data: { rating: averageRating },
+            });
+        }
         return { success: "Review submitted successfully.", review: newReview };
     } catch (error) {
         console.error("Error submitting review:", error);
@@ -118,3 +130,31 @@ export async function getReviews() {
     }
 }
 
+
+export async function updateReviewStatus(reviewId: string, status: string){
+    try {
+        if(!reviewId) return { success: false, error: "Review ID is required." };
+        const updatedReview = await db.review.update({
+            where: {
+                id: reviewId,  // Ensure `reviewId` exists and is valid
+            },
+            data: {
+                status: status, // Boolean status value being updated
+            }
+        });
+
+        return {
+            success: true,
+            message: "Review status updated successfully.",
+            data: updatedReview,
+        };
+    } catch (error) {
+        console.error("Error updating review status:", error);
+
+        return {
+            success: false,
+            message: "Failed to update review status.",
+            error: error instanceof Error ? error.message : "An unexpected error occurred.",
+        };
+    }
+};

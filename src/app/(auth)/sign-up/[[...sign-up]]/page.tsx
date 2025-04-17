@@ -1,122 +1,125 @@
 "use client";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import {useSignIn, useSignUp, useUser} from "@clerk/nextjs";
+import { useSignIn, useSignUp, useUser } from "@clerk/nextjs";
 import { RegisterForm } from "@/src/components/auth/RegisterForm";
 import { VerifyForm } from "@/src/components/auth/VerifyForm";
-import {AuthLayout} from "@/src/components/auth/AuthLayout";
-import {toast} from "react-toastify";
+import { AuthLayout } from "@/src/components/auth/AuthLayout";
+import { toast } from "react-toastify";
 
 const Signup = () => {
-    const { isLoaded, signUp, setActive } = useSignUp();
-    const [clerkError, setClerkError] = useState("");
-    const router = useRouter();
-    const [verifying, setVerifying] = useState(false);
-    const [code, setCode] = useState("");
+  const { isLoaded, signUp, setActive } = useSignUp();
+  const router = useRouter();
+  const [otpsend, setotpsend] = useState(false);
+  const [oauthloader, setoauthloader] = useState<string>("null");
+  const [loader, setloader] = useState<boolean>(false);
+  const signUpWithEmail = async ({
+    emailAddress,
+    password,
+    firstName,
+    lastName,
+  }: {
+    emailAddress: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+  }) => {
+    if (!isLoaded || !signUp) {
+      toast.error("Sign-Up service is not ready. Please wait or refresh.");
+      return;
+    }
+    try {
+      setloader(true);
+      // Step 1: Initiate sign-up
+      await signUp.create({
+        emailAddress,
+        password,
+        firstName,
+        lastName,
+        unsafeMetadata: { needsVerification: true },
+      });
+      // Step 2: Send verification email
+      await signUp.prepareEmailAddressVerification({
+        strategy: "email_code",
+      });
+      setotpsend(true);
+      toast.success("Verification email sent. Please check your inbox.");
+    } catch (err: any) {
+      const errorMessage = err.errors?.[0]?.message || "Sign-up failed.";
+      if (
+        errorMessage.includes(
+          "That email address is taken. Please try another."
+        )
+      ) {
+        toast.error("Account already exists. Please sign in.");
+      } else {
+        toast.error(errorMessage);
+      }
+    } finally {
+      setloader(false);
+    }
+  };
+  const handleVerify = async (code: string) => {
+    if (!isLoaded || !signUp) {
+      toast.error("Verification service not ready. Please wait or refresh.");
+      return;
+    }
+    try {
+      setloader(true);
+      const completeSignUp = await signUp.attemptEmailAddressVerification({
+        code,
+      });
+      if (completeSignUp.status !== "complete") {
+        toast.error("Some error occurred.Please try again.");
+        return;
+      }
+      await setActive({ session: completeSignUp.createdSessionId });
+      sessionStorage.setItem("tempSession", "active");
+      localStorage.removeItem("rememberMe");
+      toast.success("Signup successful!");
+      router.push("/");
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Verification failed. Please try again.");
+    } finally {
+      setloader(false);
+    }
+  };
+  const signUpWithOAuth = async (provider: "oauth_google" | "oauth_apple") => {
+    if (!isLoaded || !signUp) {
+      toast.error("Sign-Up service is not ready. Please wait or refresh.");
+      return;
+    }
+    if (oauthloader != "null") return;
+    try {
+      setoauthloader(provider);
+      await signUp.authenticateWithRedirect({
+        strategy: provider,
+        redirectUrl: "/sign-up/sso-callback",
+        redirectUrlComplete: "/",
+      });
+    } catch (err: any) {
+      const errorMessage =
+        err?.errors?.[0]?.message || "OAuth sign-in failed. Please try again.";
+      console.error("OAuth sign-in error:", err);
+      toast.error(errorMessage);
+    } finally {
+      setoauthloader("null");
+    }
+  };
 
-    const signUpWithEmail = async ({
-                                       emailAddress,
-                                       password,
-                                       firstName,
-                                       lastName,
-                                   }: {
-        emailAddress: string;
-        password: string;
-        firstName: string;
-        lastName: string;
-    }) => {
-        if (!isLoaded) {
-            toast.warn("Clerk is not loaded.");
-            return;
-        }
-
-        try {
-            // Create a new sign-up attempt
-            await signUp.create({
-                emailAddress,
-                password,
-                firstName,
-                lastName,
-                unsafeMetadata: { needsVerification: true },
-            });
-
-            // Send verification email
-            await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
-
-            // Transition to verification state
-            setVerifying(true);
-            toast.success("Verification email sent. Please check your inbox.");
-        } catch (err: any) {
-            const errorMessage = err.errors?.[0]?.message || "Sign-up failed.";
-            setClerkError(errorMessage);
-            toast.error(errorMessage);
-        }
-    };
-
-    const handleVerify = async (e: FormEvent) => {
-        e.preventDefault();
-        if (!isLoaded) {
-            toast.warn("Clerk is not loaded.");
-            return;
-        }
-
-        try {
-            // Attempt to verify the email address
-            const completeSignUp = await signUp.attemptEmailAddressVerification({ code });
-
-            // Handle incomplete verification
-            if (completeSignUp.status !== "complete") {
-                console.log(JSON.stringify(completeSignUp, null, 2));
-                toast.error("Invalid verification code. Please try again.");
-                return;
-            }
-
-            // Set the active session
-            await setActive({ session: completeSignUp.createdSessionId });
-            // Redirect to home page
-            toast.success("Signup successful!");
-            router.push("/");
-        } catch (err: any) {
-            const errorMessage = err.errors?.[0]?.message || "Verification failed.";
-            toast.error("Verification failed!");
-            // Handle expired or invalid verification code
-            if (errorMessage.includes("expired") || errorMessage.includes("invalid")) {
-                toast.info("Your verification code has expired. Please sign up again.");
-                setVerifying(false); // Allow the user to restart the sign-up process
-            }
-        }
-    };
-    const signUpWithOAuth = async (provider: "oauth_google" | "oauth_apple") => {
-        if (!signUp) return null;
-
-        try {
-            await signUp.authenticateWithRedirect({
-                strategy: provider,
-                redirectUrl: "/sign-up/sso-callback",
-                redirectUrlComplete: "/",
-            });
-        } catch (err: any) {
-            console.error("OAuth Sign-in Error:", err);
-            toast.error(err.errors?.[0]?.message || "An error occurred. Please try again.");
-        }
-    };
-
-
-
-    return (
-        <>
-            {!verifying ? (
-                <AuthLayout>
-                    <RegisterForm signUpWithEmail={signUpWithEmail} signUpWithOAuth={signUpWithOAuth} clerkError={clerkError} />
-                </AuthLayout>
-            ) : (
-                <AuthLayout>
-                <VerifyForm handleVerify={handleVerify} code={code} setCode={setCode} />
-                </AuthLayout>
-            )}
-        </>
-    );
+  return (
+    <AuthLayout>
+      <RegisterForm
+        signUpWithEmail={signUpWithEmail}
+        signUpWithOAuth={signUpWithOAuth}
+        otpsend={otpsend}
+        handleverify={handleVerify}
+        loader={loader}
+        oauthloader={oauthloader}
+      />
+    </AuthLayout>
+  );
 };
 
 export default Signup;
-

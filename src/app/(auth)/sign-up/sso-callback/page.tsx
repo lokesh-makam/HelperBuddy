@@ -1,10 +1,12 @@
-"use client"
-import {AuthenticateWithRedirectCallback} from '@clerk/nextjs'
+"use client";
+import { AuthenticateWithRedirectCallback } from "@clerk/nextjs";
+
 export default function SSOCallback() {
-    return (
-        <>
-            <div id="clerk-captcha"/>
-            <AuthenticateWithRedirectCallback />
-        </>
-    )
+  return (
+    <div className="flex min-h-screen items-center justify-center text-gray-700">
+      <div id="clerk-captcha" />
+      <AuthenticateWithRedirectCallback />
+      <p className="mt-4">Completing sign-up, please wait...</p>
+    </div>
+  );
 }

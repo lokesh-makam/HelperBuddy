@@ -17,9 +17,10 @@ export async function addService(formData: FormData) {
     const category = formData.get("category") as string;
     const basePrice = parseInt(formData.get("basePrice") as string);
     const estimatedTime = formData.get("estimatedTime") as string;
+    const includes= formData.get("includes") as string;
     const imageFile = formData.get("file") as File;
 
-    if (!name || !category || isNaN(basePrice) || !imageFile) {
+    if (!name || !category || isNaN(basePrice) || !imageFile||!includes) {
         return { error: "Missing required fields." };
     }
 
@@ -45,6 +46,7 @@ export async function addService(formData: FormData) {
                 category,
                 basePrice,
                 estimatedTime,
+                includes,
                 imageUrl: uploadResponse.secure_url, // Save Cloudinary URL
             },
         });

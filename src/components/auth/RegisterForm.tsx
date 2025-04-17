@@ -2,12 +2,13 @@
 
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import Image from "next/image";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import {BsFillChatLeftDotsFill} from "react-icons/bs";
 
 interface SignUpFormProps {
     signUpWithEmail: ({
@@ -22,175 +23,385 @@ interface SignUpFormProps {
         lastName: string;
     }) => void;
     signUpWithOAuth: (provider: "oauth_google" | "oauth_apple") => void;
-    clerkError: string;
+    otpsend:boolean;
+    handleverify: (code:string) => void;
+    loader:boolean;
+    oauthloader:string
 }
 
-export const RegisterForm = ({ signUpWithEmail, signUpWithOAuth, clerkError }: SignUpFormProps) => {
+export const RegisterForm = ({ signUpWithEmail, signUpWithOAuth, otpsend ,handleverify,loader,oauthloader}: SignUpFormProps) => {
     const [showPassword, setShowPassword] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [formData, setFormData] = useState({
         firstName: "",
         lastName: "",
         emailAddress: "",
         password: "",
+        confirmPassword: "",
+        otp: ""
     });
-    const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+    const validatePassword = () => {
+        const password = formData.password;
+        const confirmPassword = formData.confirmPassword;
+
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+
+        if (password !== confirmPassword) {
+            toast.error("Passwords do not match");
+            return false;
+        }
+
+        if (!passwordRegex.test(password)) {
+            toast.error("Password must be at least 8 characters and include uppercase, lowercase, number, and special character");
+            return false;
+        }
+
+        return true;
+    };
+
+
+    const handleVerifyOtp = async () => {
+        if (!formData.otp) {
+            toast.error("OTP is required");
+            return;
+        }
+        try {
+             await handleverify(formData.otp);
+        } catch (error) {
+            toast.error("Failed to verify OTP");
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!formData.firstName || !formData.lastName || !formData.emailAddress || !formData.password) {
+        if (!formData.firstName || !formData.lastName || !formData.emailAddress ||!formData.password|| !formData.password) {
             toast.error("All fields are required!");
             return;
         }
+        if(!validatePassword()){
+            return;
+        }
 
-        setIsLoading(true);
         try {
-            signUpWithEmail(formData);
+            signUpWithEmail({
+                emailAddress: formData.emailAddress,
+                password: formData.password,
+                firstName: formData.firstName,
+                lastName: formData.lastName,
+            });
         } catch (error) {
             console.error("Signup error:", error);
-        } finally {
-            setIsLoading(false);
         }
     };
+
     const handleOAuthSignUp = async (provider: "oauth_google" | "oauth_apple") => {
-        setIsLoading(true);
-        setLoadingProvider(provider);
         try {
-            setIsLoading(true);
             signUpWithOAuth(provider);
         } catch (error) {
             console.error("OAuth sign-in error:", error);
             toast.error("An error occurred. Please try again.");
         }
-        finally {
-            setTimeout(() => setLoadingProvider(null), 10000);
-            setIsLoading(false);
-        }
-    }
+    };
+
     return (
-        <>
-            <h1 className="text-4xl font-semibold text-white mb-2">Create an account</h1>
-            <p className="text-zinc-400 mb-8">
-                Already have an account?{" "}
-                <Link href="/auth/login" className="text-purple-400 hover:text-purple-300 underline underline-offset-3">
-                    Log in
-                </Link>
+        <div
+            className="w-full bg-white rounded-xl sm:px-2">
+            <div className="flex items-center justify-center gap-3 mb-8 lg:hidden">
+                <div className="bg-indigo-500 rounded-full">
+                    <Image
+                        src="/images/main.ico"
+                        alt="Helper Buddy Icon"
+                        width={40}
+                        height={40}
+                        className="object-contain"
+                    />
+                </div>
+                <div className="text-gray-900 text-3xl font-bold">
+                    Helper<span className="text-indigo-600">Buddy</span>
+                </div>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-black text-center mb-4">👋 Welcome Back</h2>
+            <p className="text-center text-gray-500 text-sm mb-6">
+                "Sign up and leave the mess to us"
             </p>
 
             <form className="space-y-4" onSubmit={handleSubmit}>
+                {/* Name Fields */}
                 <div className="flex gap-4">
+                    <div className="relative flex-1">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                            <User className="h-5 w-5"/>
+                        </div>
+                        <Input
+                            type="text"
+                            name="firstName"
+                            placeholder="First name"
+                            value={formData.firstName}
+                            onChange={handleChange}
+                            className="w-full pl-10 border-gray-300 rounded-lg"
+                            disabled={loader}
+                        />
+                    </div>
+                    <div className="relative flex-1">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                            <User className="h-5 w-5"/>
+                        </div>
+                        <Input
+                            type="text"
+                            name="lastName"
+                            placeholder="Last name"
+                            value={formData.lastName}
+                            onChange={handleChange}
+                            className="w-full pl-10 border-gray-300 rounded-lg"
+                            disabled={loader}
+                        />
+                    </div>
+                </div>
+
+                {/* Email */}
+                <div className="relative">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                        <Mail className="h-5 w-5"/>
+                    </div>
                     <Input
-                        type="text"
-                        name="firstName"
-                        placeholder="First name"
-                        value={formData.firstName}
+                        type="email"
+                        name="emailAddress"
+                        placeholder="Email"
+                        value={formData.emailAddress}
                         onChange={handleChange}
-                        className="bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-400"
-                        disabled={isLoading}
-                    />
-                    <Input
-                        type="text"
-                        name="lastName"
-                        placeholder="Last name"
-                        value={formData.lastName}
-                        onChange={handleChange}
-                        className="bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-400"
-                        disabled={isLoading}
+                        className="w-full pl-10 border-gray-300 rounded-lg"
+                        disabled={loader}
                     />
                 </div>
 
-                <Input
-                    type="email"
-                    name="emailAddress"
-                    placeholder="Email"
-                    value={formData.emailAddress}
-                    onChange={handleChange}
-                    className="bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-400"
-                    disabled={isLoading}
-                />
-
+                {/* Password */}
                 <div className="relative">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                        <Lock className="h-5 w-5"/>
+                    </div>
                     <Input
                         type={showPassword ? "text" : "password"}
                         name="password"
-                        placeholder="Enter your password"
+                        placeholder="Password"
                         value={formData.password}
                         onChange={handleChange}
-                        className="bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-400 pr-10"
-                        disabled={isLoading}
+                        className="w-full pl-10 pr-10 border-gray-300 rounded-lg"
+                        disabled={loader}
                     />
                     <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-300"
-                        disabled={isLoading}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black"
                     >
                         {showPassword ? <EyeOff className="h-5 w-5"/> : <Eye className="h-5 w-5"/>}
                     </button>
                 </div>
 
-                {clerkError && <p className="text-red-500 text-sm">{clerkError}</p>}
-                <div id="clerk-captcha"/>
-                <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-500 text-white" disabled={isLoading}>
-                    {isLoading ? "Creating..." : "Create account"}
-                </Button>
-
-                <div className="relative my-8">
-                    <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-zinc-700"></div>
+                {/* Confirm Password */}
+                <div className="relative">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                        <Lock className="h-5 w-5"/>
                     </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-zinc-950 px-2 text-zinc-400">Or register with</span>
+                    <Input
+                        type={showConfirmPassword ? "text" : "password"}
+                        name="confirmPassword"
+                        placeholder="Confirm Password"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        className="w-full pl-10 pr-10 border-gray-300 rounded-lg"
+                        disabled={loader}
+                    />
+                    <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black"
+                    >
+                        {showConfirmPassword ? <EyeOff className="h-5 w-5"/> : <Eye className="h-5 w-5"/>}
+                    </button>
+                </div>
+                {otpsend && (
+                    <div className="relative">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                            <BsFillChatLeftDotsFill className="h-5 w-5"/>
+                        </div>
+                        <Input
+                            type="text"
+                            name="otp"
+                            placeholder="Enter Otp"
+                            value={formData.otp}
+                            onChange={handleChange}
+                            className="w-full pl-10 pr-10 border-gray-300 rounded-lg"
+                            disabled={loader}
+                        />
+                    </div>
+                )}
+                <div id="clerk-captcha" />
+                {otpsend ? (
+                    <Button
+                        type="button"
+                        onClick={handleVerifyOtp}
+                        className="w-full bg-black text-white hover:bg-gray-800 rounded-lg flex items-center justify-center"
+                        disabled={loader}
+                    >
+                        {loader ? (
+                            <>
+                                <svg
+                                    className="animate-spin h-5 w-5 mr-2 text-white"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <circle
+                                        className="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                        className="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                                    ></path>
+                                </svg>
+                                Verifying...
+                            </>
+                        ) : (
+                            "Verify Otp"
+                        )}
+                    </Button>
+                ) : (
+                    <Button
+                        type="submit"
+                        className="w-full bg-black text-white hover:bg-gray-800 rounded-lg"
+                    >
+                        {loader ? (
+                            <span className="flex items-center justify-center gap-2">
+          <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Creating account...
+        </span>
+                        ) : "Create account"}
+                    </Button>
+                )}
+            </form>
+                {/* OAuth Divider */}
+                <div className="relative my-6">
+                    <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                        <span className="px-2 bg-white text-gray-500">Or register with</span>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                {/* OAuth Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3">
                     <Button
-                        type="button"
                         variant="outline"
-                        className="border-zinc-700 text-black hover:bg-zinc-800 hover:text-white"
                         onClick={() => handleOAuthSignUp("oauth_google")}
-                        disabled={loadingProvider === "oauth_google"}
+                        disabled={oauthloader === "oauth_google"}
+                        className="flex-1 bg-white border border-gray-300 hover:bg-gray-100 rounded-lg"
                     >
-                        {loadingProvider === "oauth_google" ? (
+                        {oauthloader === "oauth_google" ? (
                             <>
-                                <span className="animate-spin border-2 border-gray-500 border-t-transparent rounded-full w-4 h-4 mr-2"></span>
-                                Signing Up...
+                                <svg
+                                    className="animate-spin h-5 w-5 text-black"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                >
+                                    <circle
+                                        className="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                        className="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                </svg>
+                                Signing up...
                             </>
                         ) : (
                             <>
-                                <Image src="/images/google-icon-updated.svg" alt="Google Icon" width={20} height={20} className="mr-2" />
+                                <Image
+                                    src="https://authjs.dev/img/providers/google.svg"
+                                    alt="Google"
+                                    width={20}
+                                    height={20}
+                                    className="mr-2"
+                                    unoptimized
+                                />
                                 Google
                             </>
                         )}
                     </Button>
 
                     <Button
-                        type="button"
                         variant="outline"
-                        className="border-zinc-700 text-black hover:bg-zinc-800 hover:text-white"
                         onClick={() => handleOAuthSignUp("oauth_apple")}
-                        disabled={loadingProvider === "oauth_apple"}
+                        disabled={oauthloader === "oauth_apple"}
+                        className="flex-1 bg-white border border-gray-300 hover:bg-gray-100 rounded-lg"
                     >
-                        {loadingProvider === "oauth_apple" ? (
+                        {oauthloader === "oauth_apple" ? (
                             <>
-                                <span className="animate-spin border-2 border-gray-500 border-t-transparent rounded-full w-4 h-4 mr-2"></span>
-                                Signing Up...
+                                <svg
+                                    className="animate-spin h-5 w-5 text-black"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                >
+                                    <circle
+                                        className="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                        className="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                </svg>
+                                Signing up...
                             </>
                         ) : (
                             <>
-                                <Image src="/images/apple-icon.svg" alt="Apple Icon" width={20} height={20} className="mr-2" />
+                                <Image
+                                    src="https://authjs.dev/img/providers/apple.svg"
+                                    alt="Apple"
+                                    width={20}
+                                    height={20}
+                                    className="mr-2"
+                                    unoptimized
+                                />
                                 Apple
                             </>
                         )}
                     </Button>
                 </div>
-            </form>
-        </>
+                <p className="text-center text-sm text-gray-600 mt-6">
+                    Already have an account?{" "}
+                    <Link href="/sign-in" className="text-black hover:underline font-medium">
+                        Sign in
+                    </Link>
+                </p>
+        </div>
     );
 };
-

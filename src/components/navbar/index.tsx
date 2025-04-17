@@ -6,6 +6,8 @@ import { HamburgerMenu, UserIcon } from "@/src/components/assets/svg";
 import { NavLinks } from "@/src/components/navbar/navLinks";
 import  NavMobile  from "@/src/components/navbar/navMobile";
 import { cn } from "@/src/lib/utils";
+import Image from 'next/image';
+
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/src/components/ui/button"; // Import Button
 import {
@@ -13,13 +15,28 @@ import {
     Package,
     LogOut,
     ChevronDown,
-    Wallet
+    Wallet, ShoppingBag, Trash2,Handshake
 }
     from "lucide-react";
 import { useBoundStore } from "@/src/store/store";
 import {useClerk, useUser} from "@clerk/nextjs";
 
 interface NavbarProps {}
+interface Service {
+    id: string;                    // Prisma uses `String` for id
+    name: string;
+    description?: string;
+    category: string;
+    basePrice: number;
+    estimatedTime?: string;
+    rating: number;
+    includes?: string;
+    imageUrl?: string;
+}
+interface CartItem {
+    service: Service;
+    quantity: number;
+}
 
 export const Navbar: React.FC<NavbarProps> = () => {
     const [open, setOpen] = useState<boolean>(false);
@@ -35,7 +52,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
             label: 'My Profile',
             icon: User,
             onClick: () => {
-                router.push('/profile')
+                router.push('/profile');
                 setIsUserMenuOpen(false);
             }
         },
@@ -43,7 +60,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
             label: 'Orders',
             icon: Package,
             onClick: () => {
-                router.push('/profile/orders')
+                router.push('/profile/orders');
                 setIsUserMenuOpen(false);
             }
         },
@@ -51,7 +68,15 @@ export const Navbar: React.FC<NavbarProps> = () => {
             label: 'Wallet',
             icon: Wallet,
             onClick: () => {
-                router.push('/profile/wallet')
+                router.push('/profile/wallet');
+                setIsUserMenuOpen(false);
+            }
+        },
+        {
+            label: 'Careers',
+            icon: Handshake, 
+            onClick: () => {
+                router.push('/provider');  
                 setIsUserMenuOpen(false);
             }
         }
@@ -66,13 +91,25 @@ export const Navbar: React.FC<NavbarProps> = () => {
   }
     const handleLogout =async () => {
         await signOut(); // Clerk Sign-Out
-        router.push("/sign-in");
+        sessionStorage.removeItem("tempSession");
+        localStorage.removeItem("rememberMe");
         setIsUserMenuOpen(false);
     };
 
     // Using useBoundStore for cart state
-    const  cart = useBoundStore(state => state.cart);
-    const removeFromCart = useBoundStore(state => state.removeFromCart);
+    const cart = useBoundStore((state) => state.cart);
+    const addToCart = useBoundStore((state) => state.addToCart);
+    const removeFromCart = useBoundStore((state) => state.removeFromCart);
+    const deleteFromCart = useBoundStore((state) => state.deleteFromCart);
+
+    const increaseQuantity = (service: Service) => {
+        addToCart(service); // This will increase the quantity if the service already exists in the cart
+    };
+
+// Function to decrease the quantity or remove the service from the cart
+    const decreaseQuantity = (serviceId: string) => {
+        removeFromCart(serviceId); // This will either decrease the quantity or remove the item
+    };
 
     const totalItems=cart?cart.length:0;
     useEffect(() => {
@@ -125,7 +162,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
                                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                             >
                                 <UserIcon
-                                    stroke={isScrolling ? "black" : "white"}
+                                    stroke={color}
                                     className="w-6 h-6"
                                 />
                                 <span className={`hidden md:block text-md font-medium ${textColor}`}>
@@ -216,56 +253,143 @@ export const Navbar: React.FC<NavbarProps> = () => {
 
                 </nav>
             </div>
-            {/* Cart Sidebar */}
             {isCartOpen && (
-                <div className="fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => setIsCartOpen(false)}>
-                    <div className="fixed right-0 top-0 h-full w-96 bg-white shadow-lg p-6 flex flex-col"
-                         onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-semibold">Your Cart</h2>
-                            <button type="button" onClick={() => setIsCartOpen(false)} aria-label="Close cart">
-                                <X className="w-6"/>
+                <div
+                    className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm transition-opacity"
+                    onClick={() => setIsCartOpen(false)}
+                >
+                    <div
+                        id="cart-sidebar"
+                        className="fixed right-0 top-0 h-full w-full max-w-sm sm:max-w-md bg-white shadow-xl flex flex-col animate-slide-in-right"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="flex items-center justify-between p-4 sm:p-6 border-b">
+                            <h2 className="text-xl sm:text-2xl font-bold">Your Cart ({cart.length})</h2>
+                            <button
+                                onClick={() => setIsCartOpen(false)}
+                                className="p-1 rounded-full hover:bg-gray-100 transition"
+                                aria-label="Close cart"
+                            >
+                                <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        {/* Cart Items */}
-                        <div className="flex-1 overflow-y-auto">
+                        {/* Cart Content */}
+                        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
                             {cart.length === 0 ? (
-                                <p className="text-gray-500">Your cart is empty.</p>
-                            ) : (
-                                <div className="space-y-4">
-                                    {cart.map((item) => (
-                                        <div key={item.id}
-                                             className="flex items-center justify-between p-4 border rounded-lg">
-                                            <div>
-                                                <h3 className="font-medium">{item.name}</h3>
-                                                <p className="text-sm text-gray-500">₹{item.basePrice}</p>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <button type="button" onClick={() => removeFromCart(item.id)}
-                                                        className="p-1 rounded-full bg-gray-100 hover:bg-gray-200"
-                                                        aria-label={`Decrease quantity of ${item.name}`}>
-                                                    <Minus className="w-4 h-4"/>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
+                                <div className="flex flex-col items-center justify-center h-full gap-4 py-10 text-center">
+                                    <div className="bg-gray-50 rounded-full p-6">
+                                        <ShoppingBag className="w-12 h-12 text-gray-400" />
+                                    </div>
+                                    <p className="text-lg font-medium">Your cart is empty</p>
+                                    <p className="text-gray-500 max-w-xs">
+                                        Explore our services and add some items to your cart
+                                    </p>
+                                    <Button
+                                        onClick={() => {
+                                            setIsCartOpen(false);
+                                            router.push('/services');
+                                        }}
+                                        className="mt-4 bg-black hover:bg-gray-800 text-white px-8"
+                                    >
+                                        Browse Services
+                                    </Button>
                                 </div>
+                            ) : (
+                                <ul className="divide-y">
+                                    {cart.map((item) => (
+                                        <li key={item.id} className="py-4 sm:py-6">
+                                            <div className="flex gap-3 sm:gap-4">
+                                                {/* Product Image */}
+                                                <div className="relative h-20 w-20 sm:h-24 sm:w-24 flex-shrink-0 rounded-md overflow-hidden border">
+                                                    {item.imageUrl ? (
+                                                        <Image
+                                                            src={item.imageUrl}
+                                                            alt={item.name}
+                                                            fill
+                                                            className="object-cover"
+                                                            sizes="(max-width: 640px) 80px, 96px"
+                                                        />
+                                                    ) : (
+                                                        <div className="h-full w-full bg-gray-50 flex items-center justify-center">
+                                                            <Package className="w-8 h-8 text-gray-300" />
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Product Info */}
+                                                <div className="flex-1 flex flex-col">
+                                                    <div className="flex justify-between">
+                                                        <h3 className="font-medium text-sm sm:text-base line-clamp-2">{item.name}</h3>
+                                                        <p className="font-medium ml-2 whitespace-nowrap">
+                                                            ₹{(item.basePrice * item.quantity).toLocaleString()}
+                                                        </p>
+                                                    </div>
+
+                                                    <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                                                        ₹{item.basePrice.toLocaleString()} per unit
+                                                    </p>
+
+                                                    <div className="mt-auto flex items-center justify-between pt-2 sm:pt-3">
+                                                        {/* Quantity Controls */}
+                                                        <div className="flex items-center gap-2 border rounded-md">
+                                                            <button
+                                                                onClick={() => decreaseQuantity(item.id)}
+                                                                className="p-1 w-7 h-7 flex items-center justify-center hover:bg-gray-50 border-r"
+                                                                aria-label="Decrease quantity"
+                                                                disabled={item.quantity <= 1}
+                                                            >
+                                                                <Minus className="w-3 h-3" />
+                                                            </button>
+                                                            <span className="w-8 text-center text-sm">{item.quantity}</span>
+                                                            <button
+                                                                onClick={() => increaseQuantity(item)}
+                                                                className="p-1 w-7 h-7 flex items-center justify-center hover:bg-gray-50 border-l"
+                                                                aria-label="Increase quantity"
+                                                            >
+                                                                <Plus className="w-3 h-3" />
+                                                            </button>
+                                                        </div>
+
+                                                        {/* Remove Button */}
+                                                        <button
+                                                            onClick={() => deleteFromCart(item.id)}
+                                                            className="text-xs sm:text-sm text-gray-500 hover:text-red-500 flex items-center gap-1 transition-colors"
+                                                            aria-label="Remove item"
+                                                        >
+                                                            <Trash2 className="w-3 h-3" />
+                                                            Remove
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
                             )}
                         </div>
-                        <div className="mt-6">
-                            <Button type="button"
-                                    className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition-colors"
+
+                        {/* Checkout Button */}
+                        {cart.length > 0 && (
+                            <div className="border-t p-4 sm:p-6">
+                                <Button
                                     onClick={() => {
-                                        router.push('/services/checkout');
+                                        router.push("/services/checkout");
                                         setIsCartOpen(false);
-                                    }} disabled={cart.length === 0} aria-label="Checkout">
-                                Checkout
-                            </Button>
-                        </div>
+                                    }}
+                                    className="w-full bg-black hover:bg-gray-800 text-white py-4 rounded-md text-base"
+                                >
+                                    Proceed to Checkout
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
+
+
+
         </>
     );
 };

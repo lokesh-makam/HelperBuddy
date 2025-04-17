@@ -5,6 +5,13 @@ import  cloudinary  from "@/src/lib/cloudinary";
 
 export async function registerServicePartner(formData: any) {
     try {
+
+        const data:any=db.servicePartner.findUnique({
+            where:{email:formData.email}
+        })
+        if(data?.id){
+            return { error: "Please wait for admin approval." };
+        }
         const fullName = formData.get("fullName");
         const email = formData.get("email");
         const address = formData.get("address");
@@ -39,7 +46,7 @@ export async function registerServicePartner(formData: any) {
                 experience: parseInt(experience),
                 bio,
                 upi,
-                serviceAreas: serviceAreas.split(","),
+                serviceAreas: serviceAreas,
                 status: "pending",
                 idCard: uploadResponse.secure_url,
             },

@@ -1,12 +1,15 @@
-'use client';
-import { useState, useEffect } from 'react';
+"use client";
+import { useState, useEffect } from "react";
 
 interface AnimatedCounterProps {
   endValue: number;
   duration?: number;
 }
 
-export default function AnimatedCounter({ endValue, duration = 1000 }: AnimatedCounterProps) {
+export default function AnimatedCounter({
+  endValue,
+  duration = 1000,
+}: AnimatedCounterProps) {
   const [count, setCount] = useState(0);
 
   useEffect(() => {

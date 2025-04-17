@@ -1,7 +1,7 @@
 "use server";
 
-import { db } from "@/src/lib/db";
-import { subMonths, startOfMonth, endOfMonth, format } from "date-fns";
+import {db} from "@/src/lib/db";
+import {endOfMonth, format, startOfMonth, subMonths} from "date-fns";
 
 export async function getServiceStats() {
     try {
@@ -13,7 +13,7 @@ export async function getServiceStats() {
 
         // Fetch total revenue
         const totalRevenue = await db.serviceRequest.aggregate({
-            _sum: { amount: true },
+            _sum: { orderTotal: true },
         });
 
         // Fetch monthly revenue for the last 12 months
@@ -25,12 +25,12 @@ export async function getServiceStats() {
                     where: {
                         createdAt: { gte: monthStart, lte: monthEnd },
                     },
-                    _sum: { amount: true },
+                    _sum: { orderTotal: true },
                 });
 
                 return {
                     month: format(monthStart, "MMM yyyy"), // "Jan 2024"
-                    revenue: revenueData._sum.amount || 0,
+                    revenue: revenueData._sum.orderTotal || 0,
                 };
             })
         );
@@ -38,7 +38,7 @@ export async function getServiceStats() {
         return {
             totalCustomers,
             totalServiceRequests,
-            totalRevenue: totalRevenue._sum.amount || 0,
+            totalRevenue: totalRevenue._sum.orderTotal || 0,
             monthlyRevenue: monthlyRevenue.reverse(), // Keep months in correct order
         };
     } catch (error) {
@@ -149,5 +149,58 @@ export async function getReviewsByServiceId(serviceId:string) {
     } catch (error) {
         console.error("Error fetching reviews:", error);
         return { success: false, error: "Failed to fetch reviews." };
+    }
+}
+export async function getAllOrders() {
+    try {
+        return await db.serviceRequest.findMany({
+            include: {
+                user: true,
+                service: true,
+                servicePartner: true,
+            },
+            orderBy: {
+                createdAt: 'desc',
+            },
+        })
+    } catch (err) {
+        console.error('Error fetching all orders:', err)
+        return []
+    }
+}
+
+export async function getOrderSummary() {
+    try {
+        const orders = await db.serviceRequest.findMany({
+            select: {
+                status: true,
+                orderTotal: true,
+            },
+        })
+        const totalOrders = orders.length
+        const totalRevenue = orders
+            .filter(o => o.status === 'completed')
+            .reduce((sum, o) => sum + o.orderTotal, 0)
+
+        const pendingOrders = orders.filter(o => o.status === 'pending').length
+        const completedOrders = orders.filter(o => o.status === 'completed').length
+        const cancelledOrders = orders.filter(o => o.status === 'cancelled').length
+
+        return {
+            totalOrders,
+            totalRevenue,
+            pendingOrders,
+            completedOrders,
+            cancelledOrders,
+        }
+    } catch (error) {
+        console.error('Error fetching summary:', error)
+        return {
+            totalOrders: 0,
+            totalRevenue: 0,
+            pendingOrders: 0,
+            completedOrders: 0,
+            cancelledOrders: 0,
+        }
     }
 }

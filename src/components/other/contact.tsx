@@ -16,9 +16,13 @@ export const Contact = () => {
     const handleSubmit =async (e: React.FormEvent) => {
         e.preventDefault();
         const res=await contactUs({ fullName: formData.name, email: formData.email, message: formData.message });
-        if(res.success) toast.success(res.success);
+        if(res.success){
+            toast.success(res.success);
+            setFormData({ name: '', email: '', message: '' })
+        }
         else toast.error(res.error);
         console.log('Form Submitted:', formData);
+
     };
 
     return (

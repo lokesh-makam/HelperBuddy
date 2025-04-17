@@ -5,7 +5,9 @@ import { createContext, useContext, useState } from "react";
 const CartContext = createContext<any>(null);
 
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
-  const [cart, setCart] = useState<{ id: number; name: string; price: number }[]>([]);
+  const [cart, setCart] = useState<
+    { id: number; name: string; price: number }[]
+  >([]);
 
   const addToCart = (item: { id: number; name: string; price: number }) => {
     setCart((prevCart) => [...prevCart, item]);
