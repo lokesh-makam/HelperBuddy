@@ -13,11 +13,17 @@ import {
   Wallet,
 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
+import { useClerk } from "@clerk/nextjs";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
-
+  const { signOut } = useClerk();
+  const handleLogout = async () => {
+    await signOut(); // Clerk Sign-Out
+    sessionStorage.removeItem("tempSession");
+    localStorage.removeItem("rememberMe");
+  };
   return (
     <div className="min-h-screen flex flex-col ">
       {/* Main Content - Adjusted for Navbar Height */}
@@ -98,14 +104,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 href="/profile/wallet"
                 router={router}
               />
-              <NavItem
-                icon={LogOut}
-                label="Log Out"
-                isOpen={isOpen}
-                setIsOpen={setIsOpen}
-                href="/profile/logout"
-                router={router}
-              />
+              <button onClick={handleLogout}>
+                <NavItem
+                  icon={LogOut}
+                  label="Log Out"
+                  isOpen={isOpen}
+                  setIsOpen={setIsOpen}
+                  href="/"
+                  router={router}
+                />
+              </button>
             </div>
           </aside>
 
