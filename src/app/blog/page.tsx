@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import {
-  Share,
   Clock,
   Calendar,
   X,
@@ -9,10 +8,6 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
-  Facebook,
-  Twitter,
-  Linkedin,
-  Link as LinkIcon,
 } from "lucide-react";
 import { Dialog, DialogContent } from "@/src/components/ui/dialog";
 import { Button } from "@/src/components/ui/button";
@@ -47,7 +42,6 @@ interface BlogPost {
 const BlogPage: React.FC = () => {
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [blogPosts, setblogPost] = useState<BlogPost[]>([]);
@@ -119,25 +113,6 @@ const BlogPage: React.FC = () => {
     );
   };
 
-  const sharePost = () => {
-    if (selectedPost && navigator.share) {
-      navigator
-        .share({
-          title: selectedPost.title,
-          text: selectedPost.excerpt,
-          url: window.location.href,
-        })
-        .then(() => console.log("Successful share"))
-        .catch((error) => console.log("Error sharing", error));
-    } else {
-      setShareDialogOpen(true);
-    }
-  };
-
-  const copyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setTimeout(() => setShareDialogOpen(false), 500);
-  };
   if (loading) {
     return <Loading />;
   }
@@ -347,62 +322,6 @@ const BlogPage: React.FC = () => {
             ))}
           </div>
         )}
-
-        {/* Pagination */}
-        {filteredPosts.length > 0 && (
-          <div className="flex justify-center mt-12">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <Button
-                variant="outline"
-                size="icon"
-                className="rounded-full"
-                aria-label="Previous page"
-                onClick={handlePrevPage}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              {[1, 2, 3].map((page) => (
-                <Button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  variant="outline"
-                  className={`rounded-full transition-all ${
-                    currentPage === page
-                      ? "bg-black text-white hover:bg-black/90"
-                      : "hover:bg-black hover:text-white"
-                  }`}
-                >
-                  {page}
-                </Button>
-              ))}
-              <span className="px-1 sm:px-2 text-gray-500">...</span>
-              {/* Last Page */}
-              <Button
-                onClick={() => setCurrentPage(totalPages)}
-                variant="outline"
-                className={`rounded-full transition-all ${
-                  currentPage === totalPages
-                    ? "bg-black text-white hover:bg-black/90"
-                    : "hover:bg-black hover:text-white"
-                }`}
-              >
-                {totalPages}
-              </Button>
-              {/* Next */}
-              <Button
-                variant="outline"
-                size="icon"
-                className="rounded-full"
-                aria-label="Next page"
-                onClick={handleNextPage}
-                disabled={currentPage === totalPages}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        )}
       </div>
       {/* Blog Post Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -431,14 +350,6 @@ const BlogPage: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="rounded-full"
-                    onClick={sharePost}
-                  >
-                    <Share className="h-4 w-4" />
-                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -496,52 +407,6 @@ const BlogPage: React.FC = () => {
               </div>
             </>
           )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Share Dialog */}
-      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
-        <DialogContent className="max-w-sm bg-white rounded-xl border border-black/10 p-6">
-          <h3 className="text-lg font-medium mb-4">Share this article</h3>
-          <div className="flex justify-center space-x-4 mb-6">
-            <Button
-              variant="outline"
-              size="icon"
-              className="rounded-full h-12 w-12"
-            >
-              <Facebook className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="rounded-full h-12 w-12"
-            >
-              <Twitter className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="rounded-full h-12 w-12"
-            >
-              <Linkedin className="h-5 w-5" />
-            </Button>
-          </div>
-          <div className="relative">
-            <Input
-              readOnly
-              value={window.location.href}
-              className="pr-16 bg-gray-50 border-gray-200"
-            />
-            <Button
-              onClick={copyLink}
-              variant="default"
-              size="sm"
-              className="absolute right-1 top-1 h-8 bg-black text-white hover:bg-black/80"
-            >
-              <LinkIcon className="h-4 w-4 mr-1" />
-              Copy
-            </Button>
-          </div>
         </DialogContent>
       </Dialog>
     </div>
