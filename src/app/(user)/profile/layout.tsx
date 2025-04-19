@@ -21,8 +21,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { signOut } = useClerk();
   const handleLogout = async () => {
     await signOut(); // Clerk Sign-Out
-    sessionStorage.removeItem("tempSession");
-    localStorage.removeItem("rememberMe");
   };
   return (
     <div className="min-h-screen flex flex-col ">

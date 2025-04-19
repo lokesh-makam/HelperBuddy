@@ -3,6 +3,7 @@ import {db} from "@/src/lib/db";
 import crypto from "crypto";
 import {sendMail} from "@/src/lib/mail";
 import {sendOrderUpdateEmail} from "@/src/actions/partner";
+import {clerkClient} from "@clerk/nextjs/server"; // ✅ Correct
 export async function saveUserToDatabase(props: any) {
     try {
         const existingUser = await db.user.findUnique({
@@ -27,16 +28,15 @@ export async function saveUserToDatabase(props: any) {
 // src/actions/orderActions.js
 export async function fetchOrders(userId:any) {
     try {
-        const orders = await db.serviceRequest.findMany({
-            where: { userId },
-            orderBy: { createdAt: "desc" },
+        return await db.serviceRequest.findMany({
+            where: {userId},
+            orderBy: {createdAt: "desc"},
             include: {
                 user: true, // Include user details
                 service: true, // Include service details
                 servicePartner: true,
             },
         });
-        return orders;
     } catch (error) {
         console.error("Error fetching orders:", error);
         throw new Error("Failed to fetch orders.");
@@ -47,7 +47,7 @@ export async function cancelOrderServer(orderId: string,reason: string) {
     try {
         const order = await db.serviceRequest.findUnique({ where: { id: orderId } });
         if (!order) {
-            throw new Error("Order not found");
+            return {success: false, message: "something went wrong"}
         }
         if(order.status==="cancelled") return { success: false, message: "You cannot cancel an order that has already been cancelled." };
         if(order.status==="Accepted") return { success: false, message: "You cannot cancel an order that has already been accepted." };
@@ -95,50 +95,64 @@ export async function sendOtp(orderId: string, email: string) {
       <h3 style="color: #4CAF50; font-size: 24px;">${otp}</h3>
       <p>This code will expire in 5 minutes.</p>
       <br/>
-      <p>— Helper Buddy Team</p>
+      <p>Helper Buddy Team</p>
     </div>
   `;
 
     await sendMail(email, "Helper Buddy - Confirm Your Order", html);
 }
 export async function verifyOtpAndCompleteOrder(orderId: string, enteredOtp: string) {
-    const record = otpStore.get(orderId);
-    if (!record) {
-        throw new Error("OTP Expired. Please request a new one.");
-    }
+    try {
+        const record = otpStore.get(orderId);
+        if (!record) {
+            return { success: false, message: "OTP expired. Please request a new one." };
+        }
 
-    if (Date.now() > record.expiresAt) {
+        if (Date.now() > record.expiresAt) {
+            otpStore.delete(orderId);
+            return { success: false, message: "OTP has expired. Please request a new one." };
+        }
+
+        if (record.otp !== enteredOtp) {
+            return { success: false, message: "Invalid OTP. Please try again." };
+        }
+
+        await db.serviceRequest.update({
+            where: { id: orderId },
+            data: {
+                completionstatus: "completed",
+                status: "completed",
+                completedAt: new Date(),
+            },
+        });
+
+        const existingOrder = await db.serviceRequest.findUnique({
+            where: { id: orderId },
+            include: {
+                user: true,
+                servicePartner: true,
+                service: true,
+            },
+        });
+
+        if (existingOrder?.user?.email) {
+            await sendOrderUpdateEmail(
+                existingOrder.user.email,
+                existingOrder.status,
+                existingOrder,
+                existingOrder.servicePartner
+            );
+        }
+
         otpStore.delete(orderId);
-        throw new Error("OTP has expired. Please request a new one.");
+        return { success: true, message: "Order marked as completed." };
+    } catch (error) {
+        console.error("verifyOtpAndCompleteOrder error:", error);
+        return { success: false, message: "Something went wrong while completing the order." };
     }
-
-    if (record.otp !== enteredOtp) {
-        throw new Error("Invalid OTP. Please try again.");
-    }
-
-    await db.serviceRequest.update({
-        where: { id: orderId },
-        data: {
-            completionstatus: "completed",
-            status: "completed",
-            completedAt: new Date(), // ✅ Use Date object
-        },
-    });
-    const existingOrder = await db.serviceRequest.findUnique({
-        where: { id: orderId },
-        include: {
-            user: true,
-            servicePartner: true,
-            service: true, // If you also want service details
-        },
-    });
-    // Send email notification to the user
-    if (existingOrder?.user?.email) {
-        await sendOrderUpdateEmail(existingOrder.user.email, existingOrder.status, existingOrder, existingOrder.servicePartner);
-    }
-
-    otpStore.delete(orderId);
 }
+
+
 export const getDashboardStats = async () => {
     const allOrders = await db.serviceRequest.findMany({
         select: {
@@ -232,3 +246,23 @@ export async function getnooforders(serviceId: string): Promise<number> {
         },
     });
 }
+export const handleuserupdate = async (userId: string, firstName: string, lastName: string) => {
+    try {
+        const updatedUser = await db.user.update({
+            where: { id: userId },
+            data: {
+                firstName,
+                lastName,
+            },
+        });
+        const client = await clerkClient()
+        await client.users.updateUser(userId, {
+            firstName,
+            lastName,
+        });
+        return {success:true,data:updatedUser};
+    } catch (error) {
+        console.error("Error updating user:", error);
+        throw error;
+    }
+};

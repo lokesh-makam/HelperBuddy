@@ -91,8 +91,6 @@ export const Navbar: React.FC<NavbarProps> = () => {
   }
     const handleLogout =async () => {
         await signOut(); // Clerk Sign-Out
-        sessionStorage.removeItem("tempSession");
-        localStorage.removeItem("rememberMe");
         setIsUserMenuOpen(false);
     };
 

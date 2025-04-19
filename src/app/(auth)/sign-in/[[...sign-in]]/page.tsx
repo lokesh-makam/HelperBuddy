@@ -7,25 +7,13 @@ import { SigninForm } from "@/src/components/auth/LoginForm";
 import { AuthLayout } from "@/src/components/auth/AuthLayout";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Loading from "@/src/app/loading";
-
 const Signin = () => {
   const { isLoaded, signIn, setActive } = useSignIn();
-  const { isSignedIn } = useUser();
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
   const [oauthloader,setoauthloader]=useState<string>("null");
   const [loader,setloader]=useState<boolean>(false);
   const [emailsent, setemailsent] = useState(false);
   const { signOut } = useClerk();
-  useEffect(() => {
-    if (!isLoaded) return
-    if (isSignedIn) {
-      router.push("/");
-    }else{
-      setLoading(false);
-    }
-  }, [isSignedIn]);
 
   const validateEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
 
@@ -56,12 +44,6 @@ const Signin = () => {
 
       if (result.status === "complete" && result.createdSessionId) {
         await setActive({ session: result.createdSessionId });
-        if (rememberMe) {
-          localStorage.setItem("rememberMe", "true");
-        } else {
-          sessionStorage.setItem("tempSession", "active");
-          localStorage.removeItem("rememberMe");
-        }
         toast.success("Login successful!");
         router.push("/");
       } else {
@@ -144,9 +126,6 @@ const Signin = () => {
       setloader(false);
     }
   };
-  if (loading) {
-    return <Loading />;
-  }else{
     return (
         <AuthLayout>
           <SigninForm
@@ -160,7 +139,6 @@ const Signin = () => {
           />
         </AuthLayout>
     );
-  }
 };
 
 export default Signin;

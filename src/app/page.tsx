@@ -7,7 +7,6 @@ import { saveUserToDatabase } from "@/src/actions/user";
 import Loading from "@/src/app/loading";
 import { enterReferralCode } from "@/src/actions/referal";
 import { toast } from "react-toastify";
-import AutoSignOutOnTabClose from "@/src/components/other/rememberme";
 
 let Main = () => {
   const { user, isLoaded } = useUser();
@@ -46,9 +45,7 @@ let Main = () => {
 
   return (
     <>
-      <AutoSignOutOnTabClose />
       <Home />
-
       {/* Popup for entering referral code */}
       {referal && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
