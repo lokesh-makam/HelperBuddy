@@ -68,8 +68,6 @@ const Signup = () => {
         return;
       }
       await setActive({ session: completeSignUp.createdSessionId });
-      sessionStorage.setItem("tempSession", "active");
-      localStorage.removeItem("rememberMe");
       toast.success("Signup successful!");
       router.push("/");
     } catch (err: any) {

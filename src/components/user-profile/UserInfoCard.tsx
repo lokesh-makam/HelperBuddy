@@ -7,34 +7,31 @@ import Input from "@/src/components/form/input/InputField";
 import Label from "@/src/components/form/Label";
 import { useUser } from "@clerk/nextjs";
 import Loading from "@/src/app/loading";
+import {toast} from "react-toastify";
+import {handleuserupdate} from "@/src/actions/user";
 
 export default function UserInfoCard() {
   const { isOpen, openModal, closeModal } = useModal();
-  const { user, isLoaded } = useUser();
-
+  const { user} = useUser();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-
+  const [loading,setloading]=useState(true);
   useEffect(() => {
     if (user) {
-      setFirstName(user.firstName || "");
-      setLastName(user.lastName || "");
+      setloading(false);
     }
   }, [user]);
-
-  if (!isLoaded) {
+  if (loading) {
     return <Loading />;
   }
-
   const handleSave = async () => {
     if (!user) return;
-
     try {
-      await user.update({ firstName, lastName });
+      await handleuserupdate(user.id,firstName,lastName);
       console.log("User details updated:", { firstName, lastName });
     } catch (error) {
       console.error("Error updating profile:", error);
-      alert("Failed to update phone number. Ensure it's valid.");
+      toast.error("Failed to update profile.");
     }
   };
 
@@ -68,13 +65,6 @@ export default function UserInfoCard() {
                   {user ? user.emailAddresses[0].emailAddress : "-"}
                 </p>
               </div>
-
-              {/*<div>*/}
-              {/*  <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Phone</p>*/}
-              {/*  <p className="text-sm font-medium text-gray-800 dark:text-white/90">*/}
-              {/*    {user?.phoneNumbers[0]?.phoneNumber || "-"}*/}
-              {/*  </p>*/}
-              {/*</div>*/}
             </div>
           </div>
 
@@ -106,21 +96,28 @@ export default function UserInfoCard() {
             <form className="flex flex-col">
               <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                 <div className="col-span-2 lg:col-span-1">
-                  <Label>First Name</Label>
-                  <Input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                  <Label className="text-sm text-gray-700 dark:text-gray-300 mb-1 block">First Name</Label>
+                  <input
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="Enter first name"
+                      className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
+                  />
                 </div>
 
                 <div className="col-span-2 lg:col-span-1">
-                  <Label>Last Name</Label>
-                  <Input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                  <Label className="text-sm text-gray-700 dark:text-gray-300 mb-1 block">Last Name</Label>
+                  <input
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="Enter last name"
+                      className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
+                  />
                 </div>
 
-                {/*<div className="col-span-2 lg:col-span-1">*/}
-                {/*  <Label>Phone</Label>*/}
-                {/*  <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} />*/}
-                {/*</div>*/}
               </div>
-
               <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
                 <Button size="sm" variant="outline" onClick={closeModal}>
                   Close

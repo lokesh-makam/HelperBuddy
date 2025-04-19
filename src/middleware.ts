@@ -1,22 +1,46 @@
-import {clerkMiddleware, createRouteMatcher} from "@clerk/nextjs/server";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
-const privateroute=createRouteMatcher([
+const privateRoutes = createRouteMatcher([
     '/admin',
     '/partners',
     '/provider',
     '/profile',
-    '/services/checkout'
-])
-export default clerkMiddleware(async (auth, request) => {
-    if (privateroute(request)) {
-        await auth.protect()
+    '/profile/address',
+    '/profile/orders',
+    '/profile/referral',
+    '/profile/wallet',
+    '/services/checkout',
+]);
+const publicRoutes = createRouteMatcher(['/sign-in', '/sign-up']);
+const adminOnly = createRouteMatcher(['/admin']);
+
+export default clerkMiddleware(async (auth, req) => {
+    const { userId } = await auth();
+    if (!userId&&privateRoutes(req)) {
+        const signInUrl = new URL("/sign-in", req.url);
+        return NextResponse.redirect(signInUrl);
     }
-})
+    if(userId) {
+        const isAdmin = (await auth()).sessionClaims?.metadata?.role == "admin"
+        // If accessing /admin but not an admin
+        if (adminOnly(req) && !isAdmin) {
+            return NextResponse.redirect(new URL("/", req.url));
+        }
+        if (!publicRoutes(req)) {
+            if (!adminOnly(req) && isAdmin) {
+                return NextResponse.redirect(new URL("/admin", req.url));
+            }
+        }else{
+            return NextResponse.redirect(new URL("/", req.url));
+        }
+    }
+    return NextResponse.next();
+});
+
 export const config = {
     matcher: [
-        // Skip Next.js internals and all static files, unless found in search params
         '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-        // Always run for API routes
         '/(api|trpc)(.*)',
     ],
 };

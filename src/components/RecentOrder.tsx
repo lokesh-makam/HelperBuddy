@@ -108,6 +108,55 @@ export default function RecentOrders({ partnerdetails }: any) {
     setSelectedOrder(order);
     setIsDetailsOpen(true);
   };
+  const handleVerifyAndCompleteOrder = async ({
+                                                currentOrder,
+                                                otp,
+                                                setIsVerifying,
+                                                setOrders,
+                                                setIsOtpDialogOpen,
+                                                setOtp,
+                                              }: {
+    currentOrder: any;
+    otp: string;
+    setIsVerifying: (v: boolean) => void;
+    setOrders: React.Dispatch<React.SetStateAction<any[]>>;
+    setIsOtpDialogOpen: (v: boolean) => void;
+    setOtp: (v: string) => void;
+  }) => {
+    try {
+      setIsVerifying(true);
+      if (!currentOrder) return;
+
+      const result = await verifyOtpAndCompleteOrder(currentOrder.id, otp);
+
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+
+      setOrders((prevOrders) =>
+          prevOrders.map((order) =>
+              order.id === currentOrder.id
+                  ? {
+                    ...order,
+                    completionstatus: "completed",
+                    status: "completed",
+                    completedAt: new Date().toISOString(),
+                  }
+                  : order
+          )
+      );
+
+      setIsOtpDialogOpen(false);
+      setOtp("");
+      toast.success(result.message || "Order marked as completed!");
+    } catch (error) {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
 
   if (loading) return <Loading />;
   const handleMarkAsCompleted = async (orderId: any) => {
@@ -398,34 +447,16 @@ export default function RecentOrders({ partnerdetails }: any) {
 
               <Button
                   disabled={isVerifying || !otp.trim()}
-                  onClick={async () => {
-                    try {
-                      setIsVerifying(true);
-                      if (currentOrder) {
-                        await verifyOtpAndCompleteOrder(currentOrder.id, otp);
-                        setOrders((prevOrders) =>
-                            prevOrders.map((order) =>
-                                order.id === currentOrder.id
-                                    ? {
-                                      ...order,
-                                      completionstatus: "completed",
-                                      status: "completed",
-                                      completedAt: new Date().toISOString(), // optional
-                                    }
-                                    : order
-                            )
-                        );
-
-                        setIsOtpDialogOpen(false);
-                        setOtp("");
-                        toast.success("Order marked as completed!");
-                      }
-                    } catch (error: any) {
-                      toast.error(error.message || "Invalid OTP, please try again.");
-                    } finally {
-                      setIsVerifying(false);
-                    }
-                  }}
+                  onClick={() =>
+                      handleVerifyAndCompleteOrder({
+                        currentOrder,
+                        otp,
+                        setIsVerifying,
+                        setOrders,
+                        setIsOtpDialogOpen,
+                        setOtp,
+                      })
+                  }
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700"
               >
                 {isVerifying ? (
@@ -437,6 +468,7 @@ export default function RecentOrders({ partnerdetails }: any) {
                     "Verify & Complete"
                 )}
               </Button>
+
             </DialogFooter>
           </DialogContent>
         </Dialog>
