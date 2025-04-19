@@ -12,7 +12,6 @@ enum AddressType {
   HOME
   OFFICE
   OTHER
-
 }
 
 model User {
@@ -158,13 +157,14 @@ model Referral {
 }
 
 model Review {
-  id               String         @id @default(cuid())
-  serviceRequest   ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+  id               String          @id @default(cuid())
+  serviceRequest   ServiceRequest  @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
   serviceRequestId String
   rating           Int
   review           String
-  status           String         @default("false")
-  createdAt        DateTime       @default(now())
+  status           String          @default("false")
+  createdAt        DateTime        @default(now())
+  homepageReview   HomepageReview? // optional relation
 }
 
 model Blog {
@@ -181,4 +181,11 @@ model Blog {
   publishedAt DateTime @default(now()) // Publish date
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
+}
+
+model HomepageReview {
+  reviewId  String   @unique
+  status    Boolean  @default(false) // Status for display ("true" = visible, "false" = hidden)
+  createdAt DateTime @default(now()) // Timestamp for review creation
+  review    Review   @relation(fields: [reviewId], references: [id]) // Foreign key relation to Review
 }

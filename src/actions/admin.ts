@@ -87,23 +87,10 @@ export async function markServiceCompleted(serviceRequestId: string) {
 export async function getServices() {
     try {
         const services = await db.service.findMany({
-            orderBy: { createdAt: "desc" },
-            include: {
-                requests: {
-                    include: {
-                        Review: true, // Fetch associated reviews
-                    },
-                },
-            },
+            orderBy: { createdAt: "desc" }
         });
 
         return services.map((service) => {
-            const reviews = service.requests.flatMap((request) => request.review || []);
-            const totalReviews = reviews.length;
-            const averageRating = totalReviews > 0
-                // @ts-ignore
-                ? reviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews
-                : 0;
 
             return {
                 id: service.id,
@@ -112,10 +99,7 @@ export async function getServices() {
                 category: service.category,
                 basePrice: service.basePrice,
                 estimatedTime: service.estimatedTime || "N/A",
-                rating: Math.round(averageRating), // Rounded average rating
-                numberOfReviews: totalReviews,
                 imageUrl: service.imageUrl || "/default-image.jpg",
-                numberOfRequests: service.requests.length || 0,
             };
         });
     } catch (error) {
@@ -202,5 +186,31 @@ export async function getOrderSummary() {
             completedOrders: 0,
             cancelledOrders: 0,
         }
+    }
+}
+export async function getPriceDistributionByService() {
+    try {
+        const serviceTotals = await db.serviceRequest.groupBy({
+            by: ["serviceId"],
+            _sum: {
+                orderTotal: true,
+            },
+        });
+
+        return await Promise.all(
+            serviceTotals.map(async (entry:any) => {
+                const service = await db.service.findUnique({
+                    where: {id: entry.serviceId},
+                });
+
+                return {
+                    name: service?.name ?? "Unknown",
+                    total: entry._sum.orderTotal || 0,
+                };
+            })
+        );
+    } catch (error) {
+        console.error("Error fetching price distribution", error);
+        return [];
     }
 }

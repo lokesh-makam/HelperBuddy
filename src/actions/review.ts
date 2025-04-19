@@ -37,6 +37,11 @@ export async function submitreview({ serviceRequestId, rating, review }: ReviewI
                 review,
             },
         });
+        await db.homepageReview.create({
+            data:{
+                reviewId: newReview.id
+            }
+        })
 
         // Update the service partner's rating
         if (serviceRequest.servicePartnerId) {
@@ -106,29 +111,31 @@ export async function getReviewsByServicePartner(servicePartnerId: string) {
         return { error: "Failed to fetch reviews. Please try again later." };
     }
 }
-
 export async function getReviews() {
     try {
         const reviews = await db.review.findMany({
             include: {
                 serviceRequest: {
                     include: {
-                        user: true, // Include user details
-                        service: true, // Include service details
-                        servicePartner: true
+                        user: true,
+                        service: true,
+                        servicePartner: true,
                     },
                 },
+                homepageReview: true,
             },
             orderBy: {
-                createdAt: "desc", // Latest reviews first
+                createdAt: "desc",
             },
         });
+
         return { success: true, data: reviews };
     } catch (error) {
         console.error("Error fetching reviews:", error);
         return { success: false, error: "Failed to fetch reviews." };
     }
 }
+
 
 
 export async function updateReviewStatus(reviewId: string, status: string){
@@ -158,3 +165,61 @@ export async function updateReviewStatus(reviewId: string, status: string){
         };
     }
 };
+
+export async function toggleHomepageStatus(reviewId: string, status: boolean) {
+    try {
+        const existing = await db.homepageReview.findUnique({
+            where: { reviewId },
+        });
+        if (existing) {
+            await db.homepageReview.update({
+                where: { reviewId },
+                data: { status },
+            });
+        }
+        return { success: true };
+    } catch (error) {
+        console.error("Error toggling homepage status:", error);
+        return { success: false, error: "Something went wrong" };
+    }
+}
+
+import { formatDistanceToNow } from "date-fns";
+
+export async function getHomepageReviews() {
+    try {
+        const homepageReviews = await db.homepageReview.findMany({
+            where: {
+                status: true, // Only fetch reviews marked for homepage
+            },
+            include: {
+                review: {
+                    include: {
+                        serviceRequest: {
+                            include: {
+                                user: true,
+                                service: true,
+                                servicePartner: true,
+                            },
+                        },
+                    },
+                },
+            },
+            orderBy: {
+                createdAt: "desc",
+            },
+        });
+
+        const formatted = homepageReviews.map((item) => ({
+            ...item,
+            date: formatDistanceToNow(new Date(item.review.createdAt), { addSuffix: true }),
+        }));
+
+        console.log(formatted)
+        return { success: true, data: formatted };
+    } catch (error) {
+        console.error("Error fetching homepage reviews:", error);
+        return { success: false, error: "Something went wrong" };
+    }
+}
+

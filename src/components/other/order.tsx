@@ -201,7 +201,7 @@ const OrderManagement = () => {
             );
             toast.success("Order cancelled successfully!");
         } else {
-            toast.error("Something went wrong");
+            toast.error(`${res.message}`||"Something went wrong");
         }
         setSelectedOrder(null);
         setIsDetailsDialogOpen(false);
@@ -240,7 +240,7 @@ const OrderManagement = () => {
                 return "bg-red-500 text-white";
             case "pending":
                 return "bg-yellow-500 text-white";
-            case "Accepted":
+            case "accepted":
                 return "bg-blue-500 text-white";
             default:
                 return "bg-gray-500 text-white";
@@ -768,7 +768,7 @@ const OrderManagement = () => {
                                             <TabsContent value="cancel" className="space-y-4 pt-2">
                                                 <h3 className="font-bold text-lg">Cancel Order</h3>
                                                 <AlertDialogDescription>
-                                                Please provide a reason for cancelling this order.
+                                                    Please provide a reason for cancelling this order.
                                                     This action cannot be undone.
                                                 </AlertDialogDescription>
                                                 <div className="py-4">

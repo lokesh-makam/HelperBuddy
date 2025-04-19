@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import {Eye, Check, Clock, User, Mail, Phone, MapPin, CreditCard, Package} from "lucide-react";
+import {Eye, Check, Clock, User, Mail, Phone, MapPin, CreditCard, Package, Loader2} from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
@@ -51,7 +51,7 @@ const ServiceDashboard = ({ partnerdetails }: any) => {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [confirmOrderId, setConfirmOrderId] = useState<string | null>(null);
   const [orders, setOrders] = useState<any>([]);
-
+  const [loader,setloader]=useState(false);
   const queryClient = useQueryClient();
 
   // Fetch orders
@@ -77,17 +77,21 @@ const ServiceDashboard = ({ partnerdetails }: any) => {
   const mutation = useMutation({
     mutationFn: async (orderId: string) => {
       if (!orderId) throw new Error("Invalid order ID.");
-      await updateServiceRequestStatus(orderId, "Accepted", partnerdetails.id);
+      setloader(true);
+      await updateServiceRequestStatus(orderId, "Accepted", partnerdetails.id, partnerdetails.userId);
+      setloader(false);
     },
     onSuccess: () => {
       // @ts-ignore
       queryClient.invalidateQueries(["orders"]); // Refetch data after update
       setIsConfirmOpen(false);
       toast.success("Order accepted successfully!");
+      setloader(false);
     },
     onError: (error) => {
       console.error("Error updating service request:", error);
       toast.error(error?.message || "Failed to accept order.");
+      setloader(false);
     },
   });
 
@@ -109,7 +113,7 @@ const ServiceDashboard = ({ partnerdetails }: any) => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Pending":
+      case "pending":
         return "bg-yellow-100 text-yellow-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -270,19 +274,27 @@ const ServiceDashboard = ({ partnerdetails }: any) => {
         {/* Confirmation Dialog */}
         <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
           <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+            <DialogHeader>
               <DialogTitle>Accept Order</DialogTitle>
               <DialogDescription>
-                Are you sure you want to accept this order? This will mark the order as Pending.
+                Are you sure you want to accept this order?
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="mt-6 space-x-2">
               <Button variant="outline" onClick={() => setIsConfirmOpen(false)}>
                 Cancel
               </Button>
-              <Button variant="default" onClick={handleConfirmAccept}>
-                Accept
+              <Button variant="default" onClick={handleConfirmAccept} disabled={loader}>
+                {loader ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Accepting...
+                    </>
+                ) : (
+                    "Accept"
+                )}
               </Button>
+
             </DialogFooter>
           </DialogContent>
         </Dialog>

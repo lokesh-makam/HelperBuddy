@@ -10,6 +10,7 @@ import { useToast } from "@/src/hooks/use-toast";
 import {getReviewsByServiceId} from "@/src/actions/admin";
 import Loading from "@/src/app/loading";
 import {useRouter} from "next/navigation";
+import {getnooforders} from "@/src/actions/user";
 // Updated ServiceCard with fixed issues
 // ✅ Service Interface (from Prisma model)
 interface Service {
@@ -36,6 +37,7 @@ const ServiceCard: React.FC<any> = ({ service }) => {
     const [itemAdded, setItemAdded] = useState(false);
     const router=useRouter();
     const cartItem = cart.find((item) => item.id === service.id);
+    const [count,setcount]=useState(0);
     useEffect(() => {
         if (cartItem && !itemAdded) {
             setItemAdded(true);
@@ -51,10 +53,12 @@ const ServiceCard: React.FC<any> = ({ service }) => {
             const totalRating = data?.reduce((acc: number, review: any) => acc + review.rating, 0)||0;
             const averageRating = totalRating / (data?.length||1);
             if(reviews?.success){
-                setLoading(false);
                 setreviews(data);
                 setavgrating(averageRating);
             }
+            const data1=await getnooforders(service.id);
+            setcount(data1);
+            setLoading(false);
         }
         getreviews();
     }, []);
@@ -128,7 +132,8 @@ const ServiceCard: React.FC<any> = ({ service }) => {
                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                     {/* Subtle Overlay on Hover */}
-                    <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div
+                        className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
 
                 {/* Content Container */}
@@ -136,7 +141,7 @@ const ServiceCard: React.FC<any> = ({ service }) => {
                     {/* Rating and Reviews */}
                     <div className="mb-2 flex items-center gap-2">
                         <div className="flex items-center">
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400"/>
                             <span className="ml-1 text-sm font-medium text-gray-800">{enrichedService.rating}</span>
                         </div>
                         <span className="text-sm text-gray-500">({enrichedService.reviews.length} reviews)</span>
@@ -158,8 +163,9 @@ const ServiceCard: React.FC<any> = ({ service }) => {
                 </div>
 
                 {/* Floating Badge (Optional) */}
-                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-sm font-medium px-3 py-1 rounded-full shadow-sm">
-                    Popular
+                <div
+                    className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-sm font-medium px-3 py-1 rounded-full shadow-sm">
+                    {count}+ order{count > 1 ? 's' : ''}
                 </div>
             </div>
 

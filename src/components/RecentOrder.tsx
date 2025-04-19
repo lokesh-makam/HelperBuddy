@@ -28,10 +28,8 @@ import { getAcceptedServiceRequests } from "@/src/actions/partner";
 import {FaIndianRupeeSign} from "react-icons/fa6";
 import {DialogDescription} from "@radix-ui/react-dialog";
 import {Button} from "@/src/components/ui/button"
-import {Input} from "postcss";
 import {sendOtp, verifyOtpAndCompleteOrder} from "@/src/actions/user";
 import {toast} from "react-toastify";
-
 
 const InfoRow = ({ label, value, icon, badge = false }: any) => (
     <div className="flex justify-between items-center py-2 border-b border-gray-100">
@@ -76,6 +74,7 @@ export default function RecentOrders({ partnerdetails }: any) {
   const [isOtpDialogOpen, setIsOtpDialogOpen] = useState(false);
   const [currentOrder, setCurrentOrder] = useState<any | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isResending, setIsResending] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -116,8 +115,19 @@ export default function RecentOrders({ partnerdetails }: any) {
       return item.id===orderId;
     })
     setCurrentOrder(order[0]);
-    await sendOtp(order[0].id, order[0].user.email);
     setIsOtpDialogOpen(true);
+    await sendOtp(order[0].id, order[0].user.email);
+  };
+  const handleResendOtp = async () => {
+    try {
+      setIsResending(true);
+      await sendOtp(currentOrder.id, currentOrder.user.email);
+      toast.success("OTP resent successfully!");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to resend OTP.");
+    } finally {
+      setIsResending(false);
+    }
   };
   return (
       <div className="h-full w-full bg-white dark:bg-gray-800 md:bg-transparent">
@@ -227,7 +237,7 @@ export default function RecentOrders({ partnerdetails }: any) {
 
             {selectedOrder && (
                 <div className="space-y-6">
-                {/* Header */}
+                  {/* Header */}
                   <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100 flex justify-between items-center">
                     <div className="flex items-center">
                       <div className="bg-blue-100 p-3 rounded-full mr-4">
@@ -341,79 +351,95 @@ export default function RecentOrders({ partnerdetails }: any) {
           </DialogContent>
         </Dialog>
         <Dialog open={isOtpDialogOpen} onOpenChange={setIsOtpDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">Enter OTP</DialogTitle>
-            <DialogDescription className="text-gray-500">
-              Please enter the OTP sent to your email to confirm order completion.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="mt-6">
-            <label htmlFor="otp-input" className="block text-sm font-medium text-gray-700 mb-1">
-              Verification Code
-            </label>
-            <input
-                id="otp-input"
-                type="text"
-                placeholder="Enter 6-digit OTP"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                maxLength={6}
-            />
-          </div>
-          <DialogFooter className="mt-6 flex justify-end gap-3">
-            <Button
-                variant="outline"
-                onClick={() => setIsOtpDialogOpen(false)}
-                className="px-4 py-2"
-            >
-              Cancel
-            </Button>
-            <Button
-                disabled={isVerifying || !otp.trim()}
-                onClick={async () => {
-                  try {
-                    setIsVerifying(true);
-                    if (currentOrder) {
-                      await verifyOtpAndCompleteOrder(currentOrder.id, otp);
-                      setOrders((prevOrders) =>
-                          prevOrders.map((order) =>
-                              order.id === currentOrder.id
-                                  ? {
-                                    ...order,
-                                    completionstatus: "completed",
-                                    status: "completed",
-                                    completedAt: new Date().toISOString(), // optional
-                                  }
-                                  : order
-                          )
-                      );
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-semibold">Enter OTP</DialogTitle>
+              <DialogDescription className="text-gray-500">
+                Please enter the OTP sent to your email to confirm order completion.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="mt-6">
+              <label htmlFor="otp-input" className="block text-sm font-medium text-gray-700 mb-1">
+                Verification Code
+              </label>
+              <input
+                  id="otp-input"
+                  type="text"
+                  placeholder="Enter 6-digit OTP"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  maxLength={6}
+              />
+            </div>
+            <DialogFooter className="mt-6 flex justify-end gap-3">
+              <Button
+                  variant="outline"
+                  onClick={() => setIsOtpDialogOpen(false)}
+                  className="px-4 py-2"
+              >
+                Cancel
+              </Button>
+              <Button
+                  variant="outline"
+                  onClick={handleResendOtp}
+                  disabled={isResending}
+                  className="px-4 py-2"
+              >
+                {isResending ? (
+                    <div className="flex items-center">
+                      <span className="mr-2">Resending</span>
+                      <span className="inline-block h-4 w-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></span>
+                    </div>
+                ) : (
+                    "Resend OTP"
+                )}
+              </Button>
 
-                      setIsOtpDialogOpen(false);
-                      setOtp("");
-                      toast.success("Order marked as completed!");
+              <Button
+                  disabled={isVerifying || !otp.trim()}
+                  onClick={async () => {
+                    try {
+                      setIsVerifying(true);
+                      if (currentOrder) {
+                        await verifyOtpAndCompleteOrder(currentOrder.id, otp);
+                        setOrders((prevOrders) =>
+                            prevOrders.map((order) =>
+                                order.id === currentOrder.id
+                                    ? {
+                                      ...order,
+                                      completionstatus: "completed",
+                                      status: "completed",
+                                      completedAt: new Date().toISOString(), // optional
+                                    }
+                                    : order
+                            )
+                        );
+
+                        setIsOtpDialogOpen(false);
+                        setOtp("");
+                        toast.success("Order marked as completed!");
+                      }
+                    } catch (error: any) {
+                      toast.error(error.message || "Invalid OTP, please try again.");
+                    } finally {
+                      setIsVerifying(false);
                     }
-                  } catch (error: any) {
-                    toast.error(error.message || "Invalid OTP, please try again.");
-                  } finally {
-                    setIsVerifying(false);
-                  }
-                }}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700"
-            >
-              {isVerifying ? (
-                  <div className="flex items-center">
-                    <span className="mr-2">Verifying</span>
-                    <span className="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                  </div>
-              ) : (
-                  "Verify & Complete"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+                  }}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700"
+              >
+                {isVerifying ? (
+                    <div className="flex items-center">
+                      <span className="mr-2">Verifying</span>
+                      <span className="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    </div>
+                ) : (
+                    "Verify & Complete"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
       </div>
   );

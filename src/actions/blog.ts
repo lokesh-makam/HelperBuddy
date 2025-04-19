@@ -14,18 +14,9 @@ export async function submitBlog(formData: FormData) {
     const readTime = formData.get("readTime") as string;
     const tagsRaw = formData.get("tags") as string;
     const imageFile = formData.get("image") as File | null;
-    console.log(tagsRaw);
+    console.log(tagsRaw)
     // Check required fields
-    if (
-      !title ||
-      !excerpt ||
-      !content ||
-      !authorName ||
-      !authorBio ||
-      !category ||
-      !readTime ||
-      !tagsRaw
-    ) {
+    if (!title || !excerpt || !content || !authorName || !authorBio || !category || !readTime || !tagsRaw) {
       return { error: "Please fill all required fields." };
     }
 
@@ -47,7 +38,7 @@ export async function submitBlog(formData: FormData) {
         return { error: "Image upload failed. Try a different image." };
       }
     }
-    if (imageUrl === "") return { error: "Error in image upload." };
+    if(imageUrl==="") return {error: "Error in image upload."}
     // Save to DB
     const newBlog = await db.blog.create({
       data: {
@@ -59,7 +50,7 @@ export async function submitBlog(formData: FormData) {
         category,
         readTime,
         image: imageUrl,
-        tags: tagsRaw,
+        tags:tagsRaw,
       },
     });
 
@@ -81,16 +72,7 @@ export async function updateBlog(id: string, formData: FormData) {
     const tagsRaw = formData.get("tags") as string;
     const imageFile = formData.get("image") as File | null;
 
-    if (
-      !title ||
-      !excerpt ||
-      !content ||
-      !authorName ||
-      !authorBio ||
-      !category ||
-      !readTime ||
-      !tagsRaw
-    ) {
+    if (!title || !excerpt || !content || !authorName || !authorBio || !category || !readTime || !tagsRaw) {
       return { error: "Please fill all required fields." };
     }
 
@@ -135,6 +117,7 @@ export async function updateBlog(id: string, formData: FormData) {
   }
 }
 
+
 export async function getBlogs() {
   try {
     const blogs = await db.blog.findMany({
@@ -143,10 +126,11 @@ export async function getBlogs() {
 
     const data = blogs.map((blog) => ({
       ...blog,
-      tags: blog.tags.split(",").map((tag) => tag.trim()), // clean whitespace too
+      tags: blog.tags.split(",").map(tag => tag.trim()), // clean whitespace too
     }));
 
     return { success: true, blogs: data };
+
   } catch (error: any) {
     console.error("Error fetching blogs:", error);
     return {
@@ -167,3 +151,4 @@ export async function deleteBlogById(postId: string) {
     return { error: error.message || "Failed to delete blog" };
   }
 }
+

@@ -58,7 +58,8 @@ export async function getPendingServiceRequests() {
 export const updateServiceRequestStatus = async (
     orderId: string,
     status: string,
-    partnerId: string
+    partnerId: string,
+    userId: string
 ) => {
     if (!orderId || !status || !partnerId) {
         throw new Error("Missing required parameters.");
@@ -76,6 +77,9 @@ export const updateServiceRequestStatus = async (
     }
     if (existingOrder.acceptedByProvider) {
         throw new Error("This service request has already been accepted.");
+    }
+    if(existingOrder.user.id===userId){
+        throw new Error("You can't accept your own order");
     }
     if(status==="cancelled"){
         throw new Error("This service request has been cancelled.");

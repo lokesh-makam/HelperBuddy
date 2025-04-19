@@ -6,7 +6,6 @@ export default function SSOCallback() {
     <div className="flex min-h-screen items-center justify-center text-gray-700">
       <div id="clerk-captcha" />
       <AuthenticateWithRedirectCallback />
-      <p className="mt-4">Completing sign-up, please wait...</p>
     </div>
   );
 }

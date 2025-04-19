@@ -1,3 +1,6 @@
+-- CreateEnum
+CREATE TYPE "AddressType" AS ENUM ('HOME', 'OFFICE', 'OTHER');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
@@ -30,10 +33,21 @@ CREATE TABLE "ServicePartner" (
     "bio" TEXT,
     "status" TEXT NOT NULL DEFAULT 'pending',
     "upi" TEXT,
-    "serviceAreas" TEXT[],
+    "serviceAreas" TEXT NOT NULL,
     "idCard" TEXT,
 
     CONSTRAINT "ServicePartner_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ServicePartnerService" (
+    "id" TEXT NOT NULL,
+    "servicePartnerId" TEXT NOT NULL,
+    "serviceId" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'pending',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ServicePartnerService_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -44,7 +58,8 @@ CREATE TABLE "Service" (
     "category" TEXT NOT NULL,
     "basePrice" INTEGER NOT NULL,
     "estimatedTime" TEXT,
-    "rating" INTEGER,
+    "rating" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "includes" TEXT,
     "imageUrl" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -58,32 +73,38 @@ CREATE TABLE "ServiceRequest" (
     "userId" TEXT NOT NULL,
     "serviceId" TEXT NOT NULL,
     "servicePartnerId" TEXT,
-    "status" TEXT NOT NULL DEFAULT 'Pending',
+    "status" TEXT NOT NULL DEFAULT 'pending',
     "firstName" TEXT NOT NULL,
     "lastName" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "phone" TEXT NOT NULL,
-    "address" TEXT NOT NULL,
-    "city" TEXT NOT NULL,
-    "state" TEXT NOT NULL,
-    "postalCode" TEXT NOT NULL,
-    "amount" INTEGER NOT NULL,
-    "preferredDate" TIMESTAMP(3),
-    "preferredTime" TEXT,
     "acceptedByProvider" BOOLEAN NOT NULL DEFAULT false,
     "acceptedAt" TIMESTAMP(3),
     "completedAt" TIMESTAMP(3),
     "completionstatus" TEXT NOT NULL DEFAULT 'pending',
-    "rating" INTEGER,
-    "review" TEXT,
-    "reviewedAt" TIMESTAMP(3),
     "paymentStatus" TEXT NOT NULL DEFAULT 'pending',
-    "paymentMethod" TEXT,
-    "paymentAt" TIMESTAMP(3),
+    "paymentMethod" TEXT NOT NULL,
     "cancellationReason" TEXT,
     "cancelledAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "houseNo" TEXT NOT NULL,
+    "street" TEXT NOT NULL,
+    "city" TEXT NOT NULL,
+    "state" TEXT NOT NULL,
+    "postalCode" TEXT NOT NULL,
+    "country" TEXT NOT NULL,
+    "addressType" TEXT NOT NULL,
+    "serviceDate" TIMESTAMP(3) NOT NULL,
+    "serviceTime" TEXT NOT NULL,
+    "cartTotal" INTEGER NOT NULL,
+    "tax" INTEGER NOT NULL,
+    "shippingCost" INTEGER NOT NULL,
+    "orderTotal" INTEGER NOT NULL,
+    "walletBalance" INTEGER NOT NULL,
+    "walletAmountUsed" INTEGER NOT NULL,
+    "amountToPay" INTEGER NOT NULL,
+    "useWallet" BOOLEAN NOT NULL,
 
     CONSTRAINT "ServiceRequest_pkey" PRIMARY KEY ("id")
 );
@@ -91,16 +112,15 @@ CREATE TABLE "ServiceRequest" (
 -- CreateTable
 CREATE TABLE "Address" (
     "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
     "houseNo" TEXT NOT NULL,
     "street" TEXT NOT NULL,
     "city" TEXT NOT NULL,
     "state" TEXT NOT NULL,
-    "default" BOOLEAN NOT NULL DEFAULT false,
     "postalCode" TEXT NOT NULL,
     "country" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "default" BOOLEAN NOT NULL,
+    "addressType" "AddressType" NOT NULL,
+    "userId" TEXT NOT NULL,
 
     CONSTRAINT "Address_pkey" PRIMARY KEY ("id")
 );
@@ -123,6 +143,7 @@ CREATE TABLE "Review" (
     "serviceRequestId" TEXT NOT NULL,
     "rating" INTEGER NOT NULL,
     "review" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'false',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Review_pkey" PRIMARY KEY ("id")
@@ -132,9 +153,14 @@ CREATE TABLE "Review" (
 CREATE TABLE "Blog" (
     "id" TEXT NOT NULL,
     "title" VARCHAR(255) NOT NULL,
-    "description" TEXT NOT NULL,
+    "excerpt" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
     "image" TEXT NOT NULL,
-    "author" TEXT NOT NULL,
+    "authorName" TEXT NOT NULL,
+    "authorBio" TEXT NOT NULL,
+    "tags" TEXT NOT NULL,
+    "category" TEXT NOT NULL,
+    "readTime" TEXT NOT NULL,
     "publishedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -152,10 +178,19 @@ CREATE UNIQUE INDEX "User_referralCode_key" ON "User"("referralCode");
 CREATE UNIQUE INDEX "ServicePartner_userId_key" ON "ServicePartner"("userId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "ServicePartner_email_key" ON "ServicePartner"("email");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Referral_refereeId_key" ON "Referral"("refereeId");
 
 -- AddForeignKey
 ALTER TABLE "ServicePartner" ADD CONSTRAINT "ServicePartner_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ServicePartnerService" ADD CONSTRAINT "ServicePartnerService_servicePartnerId_fkey" FOREIGN KEY ("servicePartnerId") REFERENCES "ServicePartner"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ServicePartnerService" ADD CONSTRAINT "ServicePartnerService_serviceId_fkey" FOREIGN KEY ("serviceId") REFERENCES "Service"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ServiceRequest" ADD CONSTRAINT "ServiceRequest_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -167,7 +202,7 @@ ALTER TABLE "ServiceRequest" ADD CONSTRAINT "ServiceRequest_serviceId_fkey" FORE
 ALTER TABLE "ServiceRequest" ADD CONSTRAINT "ServiceRequest_servicePartnerId_fkey" FOREIGN KEY ("servicePartnerId") REFERENCES "ServicePartner"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Address" ADD CONSTRAINT "Address_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Address" ADD CONSTRAINT "Address_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Referral" ADD CONSTRAINT "Referral_referrerId_fkey" FOREIGN KEY ("referrerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

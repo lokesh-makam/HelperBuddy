@@ -25,11 +25,12 @@ interface SignUpFormProps {
     signUpWithOAuth: (provider: "oauth_google" | "oauth_apple") => void;
     otpsend:boolean;
     handleverify: (code:string) => void;
+    resendOTP: () => void;
     loader:boolean;
     oauthloader:string
 }
 
-export const RegisterForm = ({ signUpWithEmail, signUpWithOAuth, otpsend ,handleverify,loader,oauthloader}: SignUpFormProps) => {
+export const RegisterForm = ({ signUpWithEmail, signUpWithOAuth, otpsend ,handleverify,resendOTP,loader,oauthloader}: SignUpFormProps) => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [formData, setFormData] = useState({
@@ -70,7 +71,7 @@ export const RegisterForm = ({ signUpWithEmail, signUpWithOAuth, otpsend ,handle
             return;
         }
         try {
-             await handleverify(formData.otp);
+            await handleverify(formData.otp);
         } catch (error) {
             toast.error("Failed to verify OTP");
         }
@@ -240,42 +241,57 @@ export const RegisterForm = ({ signUpWithEmail, signUpWithOAuth, otpsend ,handle
                         />
                     </div>
                 )}
-                <div id="clerk-captcha" />
+                <div id="clerk-captcha"/>
                 {otpsend ? (
-                    <Button
-                        type="button"
-                        onClick={handleVerifyOtp}
-                        className="w-full bg-black text-white hover:bg-gray-800 rounded-lg flex items-center justify-center"
-                        disabled={loader}
-                    >
-                        {loader ? (
-                            <>
-                                <svg
-                                    className="animate-spin h-5 w-5 mr-2 text-white"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <circle
-                                        className="opacity-25"
-                                        cx="12"
-                                        cy="12"
-                                        r="10"
-                                        stroke="currentColor"
-                                        strokeWidth="4"
-                                    ></circle>
-                                    <path
-                                        className="opacity-75"
-                                        fill="currentColor"
-                                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                                    ></path>
-                                </svg>
-                                Verifying...
-                            </>
-                        ) : (
-                            "Verify Otp"
-                        )}
-                    </Button>
+                    <div className="w-full flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between mt-6">
+                        <Button
+                            type="button"
+                            onClick={handleVerifyOtp}
+                            className="w-full sm:w-3/4 md:w-4/5 bg-black text-white font-medium py-3 px-8 rounded-lg shadow-sm transition-colors duration-200 hover:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+                            disabled={loader}
+                        >
+                            {loader ? (
+                                <div className="flex items-center justify-center">
+                                    <svg
+                                        className="animate-spin h-5 w-5 mr-2 text-white"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <circle
+                                            className="opacity-25"
+                                            cx="12"
+                                            cy="12"
+                                            r="10"
+                                            stroke="currentColor"
+                                            strokeWidth="4"
+                                        ></circle>
+                                        <path
+                                            className="opacity-75"
+                                            fill="currentColor"
+                                            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                                        ></path>
+                                    </svg>
+                                    <span>Verifying...</span>
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-center">
+                                    <span>Verify OTP</span>
+                                </div>
+                            )}
+                        </Button>
+
+                        <Button
+                            type="button"
+                            onClick={resendOTP}
+                            className="w-full sm:w-1/4 md:w-1/4 bg-gray-200 text-gray-900 font-medium py-3 px-6 rounded-lg shadow-sm transition-colors duration-200 hover:bg-gray-300 border border-gray-300 focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 focus:outline-none"
+                            disabled={loader}
+                        >
+                            <div className="flex items-center justify-center">
+                                <span>Resend OTP</span>
+                            </div>
+                        </Button>
+                    </div>
                 ) : (
                     <Button
                         type="submit"
@@ -294,114 +310,114 @@ export const RegisterForm = ({ signUpWithEmail, signUpWithOAuth, otpsend ,handle
                     </Button>
                 )}
             </form>
-                {/* OAuth Divider */}
-                <div className="relative my-6">
-                    <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-gray-300"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                        <span className="px-2 bg-white text-gray-500">Or register with</span>
-                    </div>
+            {/* OAuth Divider */}
+            <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300"></div>
                 </div>
-
-                {/* OAuth Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3">
-                    <Button
-                        variant="outline"
-                        onClick={() => handleOAuthSignUp("oauth_google")}
-                        disabled={oauthloader === "oauth_google"}
-                        className="flex-1 bg-white border border-gray-300 hover:bg-gray-100 rounded-lg"
-                    >
-                        {oauthloader === "oauth_google" ? (
-                            <>
-                                <svg
-                                    className="animate-spin h-5 w-5 text-black"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                >
-                                    <circle
-                                        className="opacity-25"
-                                        cx="12"
-                                        cy="12"
-                                        r="10"
-                                        stroke="currentColor"
-                                        strokeWidth="4"
-                                    ></circle>
-                                    <path
-                                        className="opacity-75"
-                                        fill="currentColor"
-                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                    ></path>
-                                </svg>
-                                Signing up...
-                            </>
-                        ) : (
-                            <>
-                                <Image
-                                    src="https://authjs.dev/img/providers/google.svg"
-                                    alt="Google"
-                                    width={20}
-                                    height={20}
-                                    className="mr-2"
-                                    unoptimized
-                                />
-                                Google
-                            </>
-                        )}
-                    </Button>
-
-                    <Button
-                        variant="outline"
-                        onClick={() => handleOAuthSignUp("oauth_apple")}
-                        disabled={oauthloader === "oauth_apple"}
-                        className="flex-1 bg-white border border-gray-300 hover:bg-gray-100 rounded-lg"
-                    >
-                        {oauthloader === "oauth_apple" ? (
-                            <>
-                                <svg
-                                    className="animate-spin h-5 w-5 text-black"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                >
-                                    <circle
-                                        className="opacity-25"
-                                        cx="12"
-                                        cy="12"
-                                        r="10"
-                                        stroke="currentColor"
-                                        strokeWidth="4"
-                                    ></circle>
-                                    <path
-                                        className="opacity-75"
-                                        fill="currentColor"
-                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                    ></path>
-                                </svg>
-                                Signing up...
-                            </>
-                        ) : (
-                            <>
-                                <Image
-                                    src="https://authjs.dev/img/providers/apple.svg"
-                                    alt="Apple"
-                                    width={20}
-                                    height={20}
-                                    className="mr-2"
-                                    unoptimized
-                                />
-                                Apple
-                            </>
-                        )}
-                    </Button>
+                <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white text-gray-500">Or register with</span>
                 </div>
-                <p className="text-center text-sm text-gray-600 mt-6">
-                    Already have an account?{" "}
-                    <Link href="/sign-in" className="text-black hover:underline font-medium">
-                        Sign in
-                    </Link>
-                </p>
+            </div>
+
+            {/* OAuth Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                    variant="outline"
+                    onClick={() => handleOAuthSignUp("oauth_google")}
+                    disabled={oauthloader === "oauth_google"}
+                    className="flex-1 bg-white border border-gray-300 hover:bg-gray-100 rounded-lg"
+                >
+                    {oauthloader === "oauth_google" ? (
+                        <>
+                            <svg
+                                className="animate-spin h-5 w-5 text-black"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                ></circle>
+                                <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                ></path>
+                            </svg>
+                            Signing up...
+                        </>
+                    ) : (
+                        <>
+                            <Image
+                                src="https://authjs.dev/img/providers/google.svg"
+                                alt="Google"
+                                width={20}
+                                height={20}
+                                className="mr-2"
+                                unoptimized
+                            />
+                            Google
+                        </>
+                    )}
+                </Button>
+
+                <Button
+                    variant="outline"
+                    onClick={() => handleOAuthSignUp("oauth_apple")}
+                    disabled={oauthloader === "oauth_apple"}
+                    className="flex-1 bg-white border border-gray-300 hover:bg-gray-100 rounded-lg"
+                >
+                    {oauthloader === "oauth_apple" ? (
+                        <>
+                            <svg
+                                className="animate-spin h-5 w-5 text-black"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                ></circle>
+                                <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                ></path>
+                            </svg>
+                            Signing up...
+                        </>
+                    ) : (
+                        <>
+                            <Image
+                                src="https://authjs.dev/img/providers/apple.svg"
+                                alt="Apple"
+                                width={20}
+                                height={20}
+                                className="mr-2"
+                                unoptimized
+                            />
+                            Apple
+                        </>
+                    )}
+                </Button>
+            </div>
+            <p className="text-center text-sm text-gray-600 mt-6">
+                Already have an account?{" "}
+                <Link href="/sign-in" className="text-black hover:underline font-medium">
+                    Sign in
+                </Link>
+            </p>
         </div>
     );
 };
