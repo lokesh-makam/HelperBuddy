@@ -56,15 +56,10 @@ interface ConfirmationModalProps {
   onConfirm: (provider: ServicePartner) => void;
   actionType: "verify" | "decline" | "remove";
   provider: ServicePartner | null;
+  loader:any;
 }
 
-const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
-  isOpen,
-  onClose,
-  onConfirm,
-  actionType,
-  provider,
-}) => {
+const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onClose, onConfirm, actionType, provider ,loader}) => {
   if (!provider) return null;
 
   const messages = {
@@ -74,37 +69,36 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Confirm Action</DialogTitle>
-        </DialogHeader>
-        <p className="text-gray-600">{messages[actionType]}</p>
-        <DialogFooter>
-          <Button variant="secondary" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            className={
-              actionType === "verify"
-                ? "bg-green-600 hover:bg-green-700"
-                : actionType === "decline"
-                ? "bg-red-600 hover:bg-red-700"
-                : "bg-red-600 hover:bg-red-700"
-            }
-            onClick={() => onConfirm(provider)}
-          >
-            {actionType === "verify"
-              ? "✅ Verify"
-              : actionType === "decline"
-              ? "❌ Decline"
-              : "🗑️ Remove"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Action</DialogTitle>
+          </DialogHeader>
+          <p className="text-gray-600">{messages[actionType]}</p>
+          <DialogFooter>
+            <Button variant="secondary" onClick={onClose}>Cancel</Button>
+            <Button
+                className={
+                  actionType === "verify" ? "bg-green-600 hover:bg-green-700" :
+                      actionType === "decline" ? "bg-red-600 hover:bg-red-700" :
+                          "bg-red-600 hover:bg-red-700"
+                }
+                onClick={() => onConfirm(provider)}
+                disabled={loader}
+            >
+              {loader?
+                  (actionType === "verify")? "✅ Verifying" : actionType === "decline" ? "❌ Declining" : "🗑️ Removing"
+                  :
+                  actionType === "verify" ? "✅ Verify" : actionType === "decline" ? "❌ Decline" : "🗑️ Remove"
+              }
+
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
   );
 };
+
 
 function Invitation() {
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -122,6 +116,7 @@ function Invitation() {
   const [actionType, setActionType] = useState<"verify" | "decline" | "remove">(
     "verify"
   );
+  const [loader,setloader]=useState(false);
   useEffect(() => {
     if (user) {
       const getpartner = async () => {
@@ -157,24 +152,25 @@ function Invitation() {
 
   const handleConfirm = async (provider: ServicePartner) => {
     if (actionType === "verify") {
+      setloader(true);
       await approveServicePartner(provider.id);
+      setloader(false)
       toast.success("Service partner verified successfully!");
-      setproviders((prev) =>
-        prev.map((p) =>
-          p.id === provider.id ? { ...p, status: "approved" } : p
-        )
-      );
-    } else if (actionType === "decline" || actionType === "remove") {
+      setproviders((prev) => prev.map((p) => (p.id === provider.id ? { ...p, status: "approved" } : p)));
+    } else if (actionType === "decline"||actionType === "remove") {
+      setloader(true);
       await removeServicePartner(provider.id);
-      if (actionType === "decline") {
+      setloader(false)
+      if(actionType==="decline") {
         toast.success("Service partner declined.");
-      } else {
+      }else{
         toast.success("Service partner removed.");
       }
       setproviders((prev) => prev.filter((p) => p.id !== provider.id));
     }
     closeModal();
   };
+
 
   const sortedProvider = providers.filter((item) => item.status === sortOrder);
 
@@ -389,6 +385,7 @@ function Invitation() {
         onConfirm={handleConfirm}
         actionType={actionType}
         provider={selectedOrder}
+        loader={loader}
       />
     </div>
   );

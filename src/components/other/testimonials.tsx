@@ -3,83 +3,27 @@
 import { motion } from 'framer-motion';
 import { Star } from 'lucide-react';
 import { useState, useEffect } from 'react';
-
-const testimonials = [
-    {
-        "id": 1,
-        "name": "Amit Sharma",
-        "role": "Software Engineer",
-        "image": "/images/dp.jpg",
-        "review": "Exceptional service quality. The attention to detail and timely service from HelperBuddy was impressive.",
-        "rating": 5,
-        "date": "2 days ago",
-        "verified": true
-    },
-    {
-        "id": 2,
-        "name": "Priya Patel",
-        "role": "Product Designer",
-        "image": "/images/dp.jpg",
-        "review": "Fast, efficient, and very professional. Exactly what I needed. Highly recommend HelperBuddy for any service.",
-        "rating": 5,
-        "date": "1 week ago",
-        "verified": true
-    },
-    {
-        "id": 3,
-        "name": "Ravi Kumar",
-        "role": "Business Owner",
-        "image": "/images/dp.jpg",
-        "review": "The best service I've experienced in years. Highly recommended! HelperBuddy made it so easy to get professional help.",
-        "rating": 4,
-        "date": "3 days ago",
-        "verified": true
-    },
-    {
-        "id": 4,
-        "name": "Neha Reddy",
-        "role": "Marketing Director",
-        "image": "/images/dp.jpg",
-        "review": "Outstanding work ethic and results. Will definitely use HelperBuddy again for all my service needs.",
-        "rating": 5,
-        "date": "5 days ago",
-        "verified": true
-    },
-    {
-        "id": 5,
-        "name": "Sandeep Mehta",
-        "role": "Tech Consultant",
-        "image": "/images/dp.jpg",
-        "review": "Incredible attention to detail. They went above and beyond. Very impressed with HelperBuddy’s professional approach.",
-        "rating": 5,
-        "date": "1 week ago",
-        "verified": true
-    },
-    {
-        "id": 6,
-        "name": "Ayesha Khan",
-        "role": "Creative Director",
-        "image": "/images/dp.jpg",
-        "review": "Phenomenal service. They exceeded all my expectations. I’ll definitely continue to use HelperBuddy for my future needs.",
-        "rating": 5,
-        "date": "4 days ago",
-        "verified": true
-    }
-];
-
+import {getHomepageReviews, getReviews} from "@/src/actions/review";
+import Loading from "@/src/app/loading";
 
 export const Testimonials = () => {
     const [isHovered, setIsHovered] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-
-    // Simulate loading delay
+    const [testimonials,setReviews] = useState([]);
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 1000); // Adjust the delay as needed
-        return () => clearTimeout(timer);
+        const fun = async () => {
+            const data=await getHomepageReviews();
+            if(data?.success){
+                console.log(data.data)
+                setReviews(data.data);
+                setIsLoading(false)
+            }
+        }
+        fun()
     }, []);
-
+    if(isLoading){
+        return <Loading/>
+    }
     return (
         <div className="w-full py-12">
             <div className="max-w-7xl mx-auto px-4">
@@ -96,9 +40,9 @@ export const Testimonials = () => {
                         <div
                             className={`flex gap-6 animate-scroll ${isHovered ? 'pause-animation' : ''}`}
                         >
-                            {testimonials.map((testimonial, index) => (
+                            {testimonials.map((testimonial:any, index) => (
                                 <motion.div
-                                    key={testimonial.id}
+                                    key={testimonial.reviewId}
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -133,14 +77,14 @@ export const Testimonials = () => {
                                         <>
                                             <div className="flex items-start gap-4">
                                                 <img
-                                                    src={testimonial.image}
+                                                    src={"/images/dp.jpg"}
                                                     alt={testimonial.name}
                                                     loading="lazy"
                                                     className="w-12 h-12 rounded-full object-cover ring-2 ring-white/20"
                                                 />
                                                 <div>
-                                                    <h3 className="text-white font-medium">{testimonial.name}</h3>
-                                                    <p className="text-white/60 text-sm">{testimonial.role}</p>
+                                                    <h3 className="text-white font-medium">{testimonial.review.serviceRequest.firstName.charAt(0).toUpperCase() + testimonial.review.serviceRequest.firstName.slice(1).toLowerCase()} {testimonial.review.serviceRequest.lastName.charAt(0).toUpperCase() + testimonial.review.serviceRequest.lastName.slice(1).toLowerCase()}</h3>
+                                                    <p className="text-white/60 text-sm">{testimonial.review.serviceRequest.service.name}</p>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-1 mt-3">
@@ -148,7 +92,7 @@ export const Testimonials = () => {
                                                     <Star
                                                         key={i}
                                                         className={`w-4 h-4 ${
-                                                            i < testimonial.rating
+                                                            i < testimonial.review.rating
                                                                 ? 'text-yellow-400 fill-yellow-400'
                                                                 : 'text-gray-600'
                                                         }`}
@@ -156,13 +100,11 @@ export const Testimonials = () => {
                                                 ))}
                                             </div>
                                             <p className="mt-4 text-white/80 text-sm line-clamp-3">
-                                                "{testimonial.review}"
+                                                "{testimonial.review.review}"
                                             </p>
                                             <div className="mt-4 flex items-center justify-between">
                                                 <span className="text-white/40 text-xs">{testimonial.date}</span>
-                                                {testimonial.verified && (
-                                                    <span className="text-xs text-emerald-400/80">Verified Customer</span>
-                                                )}
+                                                <span className="text-xs text-emerald-400/80">Verified Customer</span>
                                             </div>
                                         </>
                                     )}

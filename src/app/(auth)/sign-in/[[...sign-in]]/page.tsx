@@ -1,8 +1,8 @@
 "use client";
 
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import {Dispatch, SetStateAction, useEffect, useState} from "react";
 import { useRouter } from "next/navigation";
-import { useClerk, useSignIn, useUser } from "@clerk/nextjs";
+import {useClerk, useSignIn, useUser} from "@clerk/nextjs";
 import { SigninForm } from "@/src/components/auth/LoginForm";
 import { AuthLayout } from "@/src/components/auth/AuthLayout";
 import { toast } from "react-toastify";
@@ -14,15 +14,15 @@ const Signin = () => {
   const { isSignedIn } = useUser();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [oauthloader, setoauthloader] = useState<string>("null");
-  const [loader, setloader] = useState<boolean>(false);
+  const [oauthloader,setoauthloader]=useState<string>("null");
+  const [loader,setloader]=useState<boolean>(false);
   const [emailsent, setemailsent] = useState(false);
   const { signOut } = useClerk();
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded) return
     if (isSignedIn) {
       router.push("/");
-    } else {
+    }else{
       setLoading(false);
     }
   }, [isSignedIn]);
@@ -30,13 +30,13 @@ const Signin = () => {
   const validateEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
 
   const signInWithEmail = async ({
-    emailAddress,
-    password,
-    rememberMe,
-  }: {
+                                   emailAddress,
+                                   password,
+                                   rememberMe,
+                                 }: {
     emailAddress: string;
     password: string;
-    rememberMe: boolean;
+    rememberMe:boolean
   }) => {
     if (!isLoaded || !signIn) {
       toast.error("Sign-in service is not ready. Please wait or refresh.");
@@ -69,18 +69,24 @@ const Signin = () => {
       }
     } catch (err: any) {
       const errorMessage =
-        err?.errors?.[0]?.message || "Something went wrong. Please try again.";
+          err?.errors?.[0]?.message || "Something went wrong. Please try again.";
       console.error("Sign-in error:", err);
-      toast.error(errorMessage);
+      if(errorMessage=="Invalid verification strategy"){
+        toast.error("You need to reset password using forget password.");
+      }else {
+        toast.error(errorMessage);
+      }
     }
   };
 
-  const signInWithOAuth = async (provider: "oauth_google" | "oauth_apple") => {
+  const signInWithOAuth = async (
+      provider: "oauth_google" | "oauth_apple"
+  ) => {
     if (!isLoaded || !signIn) {
       toast.error("Sign-in service is not ready. Please wait or refresh.");
       return;
     }
-    if (oauthloader != "null") return;
+    if(oauthloader!="null") return;
     try {
       setoauthloader(provider);
       await signIn.authenticateWithRedirect({
@@ -90,14 +96,14 @@ const Signin = () => {
       });
     } catch (err: any) {
       const errorMessage =
-        err?.errors?.[0]?.message || "OAuth sign-in failed. Please try again.";
+          err?.errors?.[0]?.message || "OAuth sign-in failed. Please try again.";
       console.error("OAuth sign-in error:", err);
       toast.error(errorMessage);
-    } finally {
+    }finally {
       setoauthloader("null");
     }
   };
-  const handleReset = async (email: string) => {
+  const handleReset = async (email:string) => {
     if (!isLoaded) return toast.error("Clerk not ready");
     try {
       setloader(true);
@@ -110,15 +116,11 @@ const Signin = () => {
     } catch (err: any) {
       console.error("Reset error:", err);
       toast.error(err.errors?.[0]?.message || "Failed to send reset email.");
-    } finally {
+    }finally {
       setloader(false);
     }
   };
-  const handleresetpassword = async (
-    code: string,
-    newPassword: string,
-    setforgetpassword: Dispatch<SetStateAction<boolean>>
-  ) => {
+  const handleresetpassword = async (code:string,newPassword:string,setforgetpassword:Dispatch<SetStateAction<boolean>>) => {
     if (!isLoaded) return;
     setloader(true);
     try {
@@ -144,19 +146,19 @@ const Signin = () => {
   };
   if (loading) {
     return <Loading />;
-  } else {
+  }else{
     return (
-      <AuthLayout>
-        <SigninForm
-          signInWithEmail={signInWithEmail}
-          signInWithOAuth={signInWithOAuth}
-          oauthloader={oauthloader}
-          emailsent={emailsent}
-          loader={loader}
-          handleReset={handleReset}
-          handleresetpassword={handleresetpassword}
-        />
-      </AuthLayout>
+        <AuthLayout>
+          <SigninForm
+              signInWithEmail={signInWithEmail}
+              signInWithOAuth={signInWithOAuth}
+              oauthloader={oauthloader}
+              emailsent={emailsent}
+              loader={loader}
+              handleReset={handleReset}
+              handleresetpassword={handleresetpassword}
+          />
+        </AuthLayout>
     );
   }
 };

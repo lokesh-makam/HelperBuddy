@@ -22,21 +22,8 @@ interface Service {
 }
 
 export default function ServiceManagement() {
-  const [services, setServices] = useState<Service[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
-
-  useEffect(() => {
-    async function fetchServices() {
-      const data: Service[] = await getServices();
-      setServices(data);
-    }
-    fetchServices();
-  }, []);
-
-  const filteredServices = services.filter((service) =>
-    service.serviceName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const handleAddServiceClick = () => {
     setIsModalOpen(true); // Open the modal
@@ -71,12 +58,12 @@ export default function ServiceManagement() {
           Add Service
         </Button>
       </div>
-      <ServicePage />
+      <ServicePage searchQuery={searchQuery}/>
       {/* Modal for Add Service */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-lg w-full">
-            <ServiceForm onClose={handleCloseModal} />
+            <ServiceForm onClose={handleCloseModal}/>
           </div>
         </div>
       )}

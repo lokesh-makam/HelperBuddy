@@ -1,6 +1,8 @@
 "use server";
 import {db} from "@/src/lib/db";
-
+import crypto from "crypto";
+import {sendMail} from "@/src/lib/mail";
+import {sendOrderUpdateEmail} from "@/src/actions/partner";
 export async function saveUserToDatabase(props: any) {
     try {
         const existingUser = await db.user.findUnique({
@@ -77,11 +79,7 @@ export async function getuser(email:string){
     const res=await db.user.findUnique({where: {email}});
     console.log(res)
     return res;
-}// Adjust path if needed
-import crypto from "crypto";
-import {sendMail} from "@/src/lib/mail";
-import {sendOrderUpdateEmail, updateServiceRequestStatus} from "@/src/actions/partner";
-import {Handshake, ListChecks, Smile, Truck} from "lucide-react";
+}
 
 const otpStore = new Map<string, { otp: string; expiresAt: number }>();
 
@@ -117,7 +115,7 @@ export async function verifyOtpAndCompleteOrder(orderId: string, enteredOtp: str
     if (record.otp !== enteredOtp) {
         throw new Error("Invalid OTP. Please try again.");
     }
-    console.log("before entering:")
+
     await db.serviceRequest.update({
         where: { id: orderId },
         data: {
@@ -126,7 +124,6 @@ export async function verifyOtpAndCompleteOrder(orderId: string, enteredOtp: str
             completedAt: new Date(), // ✅ Use Date object
         },
     });
-    console.log("After entering:")
     const existingOrder = await db.serviceRequest.findUnique({
         where: { id: orderId },
         include: {
@@ -139,7 +136,6 @@ export async function verifyOtpAndCompleteOrder(orderId: string, enteredOtp: str
     if (existingOrder?.user?.email) {
         await sendOrderUpdateEmail(existingOrder.user.email, existingOrder.status, existingOrder, existingOrder.servicePartner);
     }
-    console.log("After after after entering:")
 
     otpStore.delete(orderId);
 }
@@ -189,7 +185,7 @@ export const getDashboardStats = async () => {
 export async function getStats() {
     const [trustedPartners, happyCustomers, serviceTypes, servicesDelivered] = await Promise.all([
         db.servicePartner.count({
-            where: { status: "accepted" },
+            where: { status: "approved" },
         }),
         db.user.count(),
         db.service.count(),
@@ -201,31 +197,38 @@ export async function getStats() {
     return [
         {
             value: trustedPartners,
-            label: "Verified Professionals",
-            description: "Certified service providers",
+            label: "Trusted Partners",
+            description: "Service Providing Partners",
             icon: 'handshake',
             color: "from-blue-100 to-blue-200",
         },
         {
             value: happyCustomers,
-            label: "Our Customers",
-            description: "Positive customer feedback",
+            label: "Happy Customers",
+            description: "Satisfied clients",
             icon: 'smile',
             color: "from-emerald-100 to-emerald-200",
         },
         {
             value: serviceTypes,
-            label: "Our Services",
-            description: "Diverse service portfolio",
+            label: "Service Types",
+            description: "Unique Services we offer",
             icon: 'listChecks',
             color: "from-purple-100 to-purple-200",
         },
         {
             value: servicesDelivered,
-            label: "Completed Services",
-            description: "Successful service deliveries",
+            label: "Services Delivered",
+            description: "Successfully Executed Orders",
             icon: 'truck',
             color: "from-amber-100 to-amber-200",
-        }
+        },
     ];
+}
+export async function getnooforders(serviceId: string): Promise<number> {
+    return db.serviceRequest.count({
+        where: {
+            serviceId,
+        },
+    });
 }

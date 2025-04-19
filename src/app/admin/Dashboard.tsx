@@ -13,7 +13,7 @@ import {
   ArcElement,
 } from "chart.js";
 import AnimatedCounter from "./AnimatedCounter";
-import { getServiceStats } from "@/src/actions/admin"; // Import server action
+import {getPriceDistributionByService, getServiceStats} from "@/src/actions/admin"; // Import server action
 import { toast } from "react-toastify";
 import Loading from "@/src/app/loading";
 
@@ -27,6 +27,14 @@ ChartJS.register(
   Legend,
   ArcElement
 );
+const getColors = (count: number) => {
+  const palette = [
+    "#4CAF50", "#FF9800", "#2196F3", "#FF5722", "#9C27B0", "#00BCD4",
+    "#FFC107", "#795548", "#E91E63", "#607D8B", "#8BC34A", "#3F51B5",
+  ];
+  return Array.from({ length: count }, (_, i) => palette[i % palette.length]);
+};
+
 
 export default function Dashboard() {
   const [customers, setCustomers] = useState(0);
@@ -35,34 +43,65 @@ export default function Dashboard() {
   const [chartData, setChartData] = useState({ labels: [], datasets: [] });
   const [loading, setloading] = useState(true);
   // Pie chart remains fake
-  const pieChartData = {
-    labels: [
-      "Cleaning Service",
-      "Plumbing Service",
-      "Electrical Repair",
-      "Gardening Service",
-    ],
-    datasets: [
-      {
-        data: [35, 25, 20, 20],
-        backgroundColor: ["#4CAF50", "#FF9800", "#2196F3", "#FF5722"],
-        borderColor: ["#388E3C", "#F57C00", "#1976D2", "#D32F2F"],
-        borderWidth: 2,
+  // const pieChartData = {
+  //   labels: [
+  //     "Cleaning Service",
+  //     "Plumbing Service",
+  //     "Electrical Repair",
+  //     "Gardening Service",
+  //   ],
+  //   datasets: [
+  //     {
+  //       data: [35, 25, 20, 20],
+  //       backgroundColor: ["#4CAF50", "#FF9800", "#2196F3", "#FF5722"],
+  //       borderColor: ["#388E3C", "#F57C00", "#1976D2", "#D32F2F"],
+  //       borderWidth: 2,
+  //     },
+  //   ],
+  // };
+  const [pieChartData, setPieChartData] = useState<{
+    labels: string[];
+    datasets: {
+      data: number[];
+      backgroundColor: string[];
+      borderColor?: string | string[];
+      borderWidth?: number;
+    }[];
+  }>({
+    labels: [],
+    datasets: [],
+  });
+
+  const pieChartOptions = {
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: function (tooltipItem: any) {
+            return `₹ ${tooltipItem.raw.toLocaleString()}`;
+          },
+        },
       },
-    ],
+      legend: {
+        position: "bottom" as const,
+        labels: {
+          color: "#4B5563", // Optional: styling
+        },
+      },
+    },
   };
 
   useEffect(() => {
     async function fetchStats() {
       try {
         const response = await getServiceStats();
+        const priceData = await getPriceDistributionByService();
         if (response.error) {
           toast.error(response.error);
           return;
         }
-        setCustomers(response?.totalCustomers);
-        setBookings(response?.totalServiceRequests);
-        setRevenue(response?.totalRevenue);
+        setCustomers(response?.totalCustomers||0);
+        setBookings(response?.totalServiceRequests||0);
+        setRevenue(response?.totalRevenue||0);
 
         // Populate Bar Chart Data
         setChartData({
@@ -80,6 +119,17 @@ export default function Dashboard() {
               borderWidth: 2,
               borderRadius: 6,
               barThickness: 40,
+            },
+          ],
+        });
+        setPieChartData({
+          labels: priceData.map((item) => item.name),
+          datasets: [
+            {
+              data: priceData.map((item) => item.total),
+              backgroundColor: getColors(priceData.length),
+              borderColor: "#fff",
+              borderWidth: 2,
             },
           ],
         });
@@ -166,7 +216,7 @@ export default function Dashboard() {
         </h3>
         <div className="flex justify-center items-center h-96">
           <div className="w-full h-full max-w-[600px]">
-            <Pie data={pieChartData} />
+            <Pie data={pieChartData} options={pieChartOptions}/>
           </div>
         </div>
       </div>

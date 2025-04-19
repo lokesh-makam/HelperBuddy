@@ -60,15 +60,15 @@ export default function HomePage() {
           isMobile ? (isCollapsed ? "ml-0" : "ml-64") : "ml-0" // <- THIS IS KEY FOR DESKTOP, IGNORE COLLAPSE WIDTH SHIFT
         } flex-1`}
       >
-        <header className="bg-white shadow-md p-4 flex justify-between items-center shrink-0">
-          <div className="relative flex-1 max-w-md">
-            <input
-              type="text"
-              placeholder="Search..."
-              className="w-full rounded-full border px-5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-          </div>
-        </header>
+        {/*<header className="bg-white shadow-md p-4 flex justify-between items-center shrink-0">*/}
+        {/*  <div className="relative flex-1 max-w-md">*/}
+        {/*    <input*/}
+        {/*      type="text"*/}
+        {/*      placeholder="Search..."*/}
+        {/*      className="w-full rounded-full border px-5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"*/}
+        {/*    />*/}
+        {/*  </div>*/}
+        {/*</header>*/}
 
         <main className="flex-grow h-0 overflow-y-auto p-4 bg-gray-100">
           {activeMenuItem === "Dashboard" && <Dashboard />}
