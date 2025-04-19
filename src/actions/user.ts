@@ -117,7 +117,7 @@ export async function verifyOtpAndCompleteOrder(orderId: string, enteredOtp: str
     if (record.otp !== enteredOtp) {
         throw new Error("Invalid OTP. Please try again.");
     }
-
+    console.log("before entering:")
     await db.serviceRequest.update({
         where: { id: orderId },
         data: {
@@ -126,6 +126,7 @@ export async function verifyOtpAndCompleteOrder(orderId: string, enteredOtp: str
             completedAt: new Date(), // ✅ Use Date object
         },
     });
+    console.log("After entering:")
     const existingOrder = await db.serviceRequest.findUnique({
         where: { id: orderId },
         include: {
@@ -136,8 +137,9 @@ export async function verifyOtpAndCompleteOrder(orderId: string, enteredOtp: str
     });
     // Send email notification to the user
     if (existingOrder?.user?.email) {
-       await sendOrderUpdateEmail(existingOrder.user.email, existingOrder.status, existingOrder, existingOrder.servicePartner);
+        await sendOrderUpdateEmail(existingOrder.user.email, existingOrder.status, existingOrder, existingOrder.servicePartner);
     }
+    console.log("After after after entering:")
 
     otpStore.delete(orderId);
 }
