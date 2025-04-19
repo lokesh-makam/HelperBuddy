@@ -172,7 +172,7 @@ export const getDashboardStats = async () => {
     const completedOrders = allOrders.filter(o => o.status === 'completed');
     const cancelledOrders = allOrders.filter(o => o.status === 'cancelled');
     const pendingOrders = allOrders.filter(o =>
-        ['pending', 'accepted'].includes(o.status)
+        ['pending', 'Accepted'].includes(o.status)
     );
 
     const lastMonthRevenue = allOrders
