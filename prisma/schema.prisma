@@ -8,13 +8,6 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-enum AddressType {
-  HOME
-  OFFICE
-  OTHER
-
-}
-
 model User {
   id                String           @id
   email             String           @unique
@@ -22,19 +15,18 @@ model User {
   lastName          String
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
-  walletBalance     Int              @default(100) // Wallet balance in currency
-  referralCode      String           @unique @default(uuid()) // Unique referral code for each user
-  requests          ServiceRequest[]
-  servicePartner    ServicePartner?
+  walletBalance     Int              @default(100)
+  referralCode      String           @unique @default(uuid())
   role              String           @default("user")
   address           Address[]
-  referralsSent     Referral[]       @relation("Referrer") // Users this user referred
-  referralsReceived Referral?        @relation("Referee") // Users who referred this user
+  referralsReceived Referral?        @relation("Referee")
+  referralsSent     Referral[]       @relation("Referrer")
+  servicePartner    ServicePartner?
+  requests          ServiceRequest[]
 }
 
 model ServicePartner {
   id                     String                  @id @default(cuid())
-  user                   User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId                 String                  @unique
   experience             Int
   fullName               String
@@ -50,19 +42,20 @@ model ServicePartner {
   status                 String                  @default("pending")
   upi                    String?
   serviceAreas           String
-  idCard                 String? // URL of the uploaded ID card
-  serviceRequests        ServiceRequest[]
+  idCard                 String?
+  user                   User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
   servicePartnerServices ServicePartnerService[]
+  serviceRequests        ServiceRequest[]
 }
 
 model ServicePartnerService {
   id               String         @id @default(cuid())
-  servicePartner   ServicePartner @relation(fields: [servicePartnerId], references: [id], onDelete: Cascade)
   servicePartnerId String
-  service          Service        @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   serviceId        String
   status           String         @default("pending")
   createdAt        DateTime       @default(now())
+  service          Service        @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  servicePartner   ServicePartner @relation(fields: [servicePartnerId], references: [id], onDelete: Cascade)
 }
 
 model Service {
@@ -77,17 +70,14 @@ model Service {
   imageUrl               String?
   createdAt              DateTime                @default(now())
   updatedAt              DateTime                @updatedAt
-  requests               ServiceRequest[] // Requests for this service
   servicePartnerServices ServicePartnerService[]
+  requests               ServiceRequest[]
 }
 
 model ServiceRequest {
   id                 String          @id @default(cuid())
-  user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId             String
-  service            Service         @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   serviceId          String
-  servicePartner     ServicePartner? @relation(fields: [servicePartnerId], references: [id], onDelete: Cascade)
   servicePartnerId   String?
   status             String          @default("pending")
   firstName          String
@@ -98,36 +88,33 @@ model ServiceRequest {
   acceptedAt         DateTime?
   completedAt        DateTime?
   completionstatus   String          @default("pending")
-
-  paymentStatus String @default("pending")
-  paymentMethod String
-
+  paymentStatus      String          @default("pending")
+  paymentMethod      String
   cancellationReason String?
   cancelledAt        DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Additional fields
-  houseNo          String
-  street           String
-  city             String
-  state            String
-  postalCode       String
-  country          String
-  addressType      String
-  serviceDate      DateTime // kept as string to match ISO date string usage, could be DateTime if desired
-  serviceTime      String
-  cartTotal        Int
-  tax              Int
-  shippingCost     Int
-  orderTotal       Int
-  walletBalance    Int
-  walletAmountUsed Int
-  amountToPay      Int
-  useWallet        Boolean
-
-  Review Review[]
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  houseNo            String
+  street             String
+  city               String
+  state              String
+  postalCode         String
+  country            String
+  addressType        String
+  serviceDate        DateTime
+  serviceTime        String
+  cartTotal          Int
+  tax                Int
+  shippingCost       Int
+  orderTotal         Int
+  walletBalance      Int
+  walletAmountUsed   Int
+  amountToPay        Int
+  useWallet          Boolean
+  Review             Review[]
+  service            Service         @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  servicePartner     ServicePartner? @relation(fields: [servicePartnerId], references: [id], onDelete: Cascade)
+  user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Address {
@@ -139,54 +126,58 @@ model Address {
   postalCode  String
   country     String
   default     Boolean
-  addressType AddressType // This field is now of the enum type AddressType
+  addressType AddressType
   userId      String
   User        User        @relation(fields: [userId], references: [id])
 }
 
 model Referral {
-  id           String  @id @default(cuid())
+  id           String   @id @default(cuid())
   referrerId   String
-  refereeId    String  @unique //  This ensures a user can only be referred once
-  rewardAmount Int     @default(50)
-  isCompleted  Boolean @default(false)
-
-  createdAt DateTime @default(now())
-
-  referrer User @relation("Referrer", fields: [referrerId], references: [id])
-  referee  User @relation("Referee", fields: [refereeId], references: [id])
+  refereeId    String   @unique
+  rewardAmount Int      @default(50)
+  isCompleted  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  referee      User     @relation("Referee", fields: [refereeId], references: [id])
+  referrer     User     @relation("Referrer", fields: [referrerId], references: [id])
 }
 
 model Review {
-  id               String         @id @default(cuid())
-  serviceRequest   ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+  id               String          @id @default(cuid())
   serviceRequestId String
   rating           Int
   review           String
-  status           String         @default("false")
-  createdAt        DateTime       @default(now())
-  homepageReview   HomepageReview? // optional relation
+  status           String          @default("false")
+  createdAt        DateTime        @default(now())
+  homepageReview   HomepageReview?
+  serviceRequest   ServiceRequest  @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
 }
 
 model Blog {
-  id          String   @id @default(uuid()) // Unique identifier
-  title       String   @db.VarChar(255) // Blog title
-  excerpt     String // Short summary
-  content     String // Full HTML content
-  image       String // Image URL
-  authorName  String // Author name
-  authorBio   String // Author bio
-  tags        String // Array of tags
-  category    String // Category (e.g. Lifestyle, Tech)
-  readTime    String // Read time
-  publishedAt DateTime @default(now()) // Publish date
+  id          String   @id @default(uuid())
+  title       String   @db.VarChar(255)
+  excerpt     String
+  content     String
+  image       String
+  authorName  String
+  authorBio   String
+  tags        String
+  category    String
+  readTime    String
+  publishedAt DateTime @default(now())
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 }
 
 model HomepageReview {
   reviewId  String   @unique
-  status    Boolean  @default(false) // Status for display ("true" = visible, "false" = hidden)
-  createdAt DateTime @default(now()) // Timestamp for review creation
-  review    Review   @relation(fields: [reviewId], references: [id]) // Foreign key relation to Review
+  status    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  review    Review   @relation(fields: [reviewId], references: [id])
+}
+
+enum AddressType {
+  HOME
+  OFFICE
+  OTHER
 }
