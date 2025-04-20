@@ -14,6 +14,7 @@ import NavbarWrapper from "@/src/components/NavbarWrapper";
 import { getuser } from "@/src/actions/user";
 import { useRouter } from "next/navigation";
 import Loading from "@/src/app/loading";
+import { Analytics } from "@vercel/analytics/next";
 
 // Correctly import Footer
 const Footer = dynamic(
@@ -66,7 +67,10 @@ export default function RootLayout({
               <ProgressProvider />
               <div className="flex-1 flex flex-col">
                 <NavbarWrapper />
-                <main className="flex-1">{children}</main>
+                <main className="flex-1">
+                  {children}
+                  <Analytics />
+                </main>
               </div>
               {showFooter && (
                 <div className="transition-opacity duration-500 ease-in-out opacity-100">
