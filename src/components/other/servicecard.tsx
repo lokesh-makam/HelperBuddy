@@ -20,63 +20,43 @@ interface Service {
     category: string;
     basePrice: number;
     estimatedTime?: string;
-    rating: number;
     includes?: string;
     imageUrl?: string;
+    rating: number;
+    averageRating: number;
+    totalOrders: number;
+    completedOrders: number;
+    approvedReviews: {
+        id: string;
+        rating: number;
+        comment?: string;
+        serviceRequest: {
+            id: string;
+            user: any; // Replace with proper user type if needed
+            service: any;
+            servicePartner: any;
+        };
+    }[];
 }
 
 const ServiceCard: React.FC<any> = ({ service }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [reviews, setreviews] = useState<any>([]);
     const cart = useBoundStore((state) => state.cart);
     const addToCart = useBoundStore((state) => state.addToCart);
     const removeFromCart = useBoundStore((state) => state.removeFromCart);
-    const [avgrating, setavgrating] = useState(0);
     const [activeButton, setActiveButton] = useState(null);
     const [itemAdded, setItemAdded] = useState(false);
     const router=useRouter();
     const cartItem = cart.find((item) => item.id === service.id);
-    const [count,setcount]=useState(0);
     useEffect(() => {
         if (cartItem && !itemAdded) {
             setItemAdded(true);
             setTimeout(() => setItemAdded(false), 300);
         }
     }, [cartItem?.quantity]);
-    // Reset animation when cart item changes
-
-    useEffect(() => {
-        async function getreviews() {
-            const reviews = await getReviewsByServiceId(service.id);
-            const data=reviews?.data?.filter((item: any) => item.status == "true");
-            const totalRating = data?.reduce((acc: number, review: any) => acc + review.rating, 0)||0;
-            const averageRating = totalRating / (data?.length||1);
-            if(reviews?.success){
-                setreviews(data);
-                setavgrating(averageRating);
-            }
-            const data1=await getnooforders(service.id);
-            setcount(data1);
-            setLoading(false);
-        }
-        getreviews();
-    }, []);
-    if(loading){
-        return <Loading/>
-    }
     const enrichedService = {
         ...service,
-        reviews: reviews,
-        rating: avgrating,
-        duration: service.duration,
-        availableDate: service.availableDate || "Today",
-        includes: service?.includes?.split(",") || ["Standard package", "Basic support", "One revision"]
     };
-
-
-
-
     const handleButtonPress = (button:any) => {
         setActiveButton(button);
         setTimeout(() => setActiveButton(null), 150);
@@ -100,12 +80,7 @@ const ServiceCard: React.FC<any> = ({ service }) => {
             useBoundStore.setState({ cart: updatedCart });
         }
     };
-
-
     const handleCheckCart = () => {
-        // e.stopPropagation();
-        // Navigate to cart page - you'll need to implement this according to your routing setup
-        // For example: router.push('/cart') if using Next.js
         console.log("Navigate to cart page");
         setIsModalOpen(false);
         router.push("/services/checkout")
@@ -123,7 +98,6 @@ const ServiceCard: React.FC<any> = ({ service }) => {
                 onClick={() => setIsModalOpen(true)}
                 className="cursor-pointer group relative overflow-hidden transition-all duration-300 bg-white rounded-xl border border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-lg"
             >
-                {/* Image Container */}
                 <div className="relative aspect-square overflow-hidden rounded-t-xl">
                     <img
                         src={enrichedService.imageUrl || "/placeholder.png"}
@@ -131,57 +105,33 @@ const ServiceCard: React.FC<any> = ({ service }) => {
                         loading="lazy"
                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
-                    {/* Subtle Overlay on Hover */}
                     <div
                         className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
-
-                {/* Content Container */}
                 <div className="p-4">
-                    {/* Rating and Reviews */}
                     <div className="mb-2 flex items-center gap-2">
                         <div className="flex items-center">
                             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400"/>
-                            <span className="ml-1 text-sm font-medium text-gray-800">{enrichedService.rating}</span>
+                            <span className="ml-1 text-sm font-medium text-gray-800">{enrichedService.averageRating}</span>
                         </div>
-                        <span className="text-sm text-gray-500">({enrichedService.reviews.length} reviews)</span>
+                        <span className="text-sm text-gray-500">({enrichedService.approvedReviews.length} reviews)</span>
                     </div>
-
-                    {/* Service Name */}
                     <h3 className="font-semibold text-lg text-gray-900 mb-1">{enrichedService.name}</h3>
-
-                    {/* Description */}
                     <p className="text-sm text-gray-600 mb-2 line-clamp-2 min-h-[40px]">{enrichedService.description}</p>
-
-                    {/* Price */}
                     <div className="flex items-center gap-2">
                         <span className="text-lg font-semibold text-gray-900">₹{enrichedService.basePrice}</span>
                         <span className="text-sm text-gray-500">/ service</span>
                     </div>
-
-
                 </div>
-
-                {/* Floating Badge (Optional) */}
                 <div
                     className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-sm font-medium px-3 py-1 rounded-full shadow-sm">
-                    {count}+ order{count > 1 ? 's' : ''}
+                    {enrichedService.totalOrders}+ order{enrichedService.totalOrders > 1 ? 's' : ''}
                 </div>
             </div>
-
-            {/* Detailed Service Modal */}
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-white text-black">
                     <DialogHeader className="relative">
                         <DialogTitle className="sr-only">{enrichedService.name} Details</DialogTitle>
-                        {/* <Button
-              variant="ghost"
-              className="absolute top-0 right-0 rounded-full p-2 z-10"
-              onClick={() => setIsModalOpen(false)}
-              aria-label="Close dialog"
-            >
-              <X className="h-4 w-4" />
-            </Button> */}
                         <div className="h-64 w-full relative mb-6">
                             <img
                                 src={enrichedService.imageUrl || "/placeholder.png"}
@@ -203,9 +153,9 @@ const ServiceCard: React.FC<any> = ({ service }) => {
                         <div className="flex flex-wrap items-center gap-4 mb-4">
                             <div className="flex items-center">
                                 <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                                <span className="ml-1 font-medium">{enrichedService.rating}</span>
+                                <span className="ml-1 font-medium">{enrichedService.averageRating}</span>
                             </div>
-                            <span className="text-gray-600">({enrichedService.reviews.length} reviews)</span>
+                            <span className="text-gray-600">({enrichedService.approvedReviews.length} reviews)</span>
                             <div className="flex items-center text-gray-600">
                                 <Clock className="h-4 w-4 mr-1" />
                                 <span>{enrichedService.estimatedTime}</span>
@@ -235,25 +185,19 @@ const ServiceCard: React.FC<any> = ({ service }) => {
                                     <div>
                                         <h3 className="font-semibold mb-2">Includes</h3>
                                         <ul className="list-disc pl-5 space-y-1">
-                                            {enrichedService.includes.map((item: string, i: number) => (
+                                            {enrichedService.includes.split(',').map((item: string, i: number) => (
                                                 <li key={i} className="text-gray-700">
                                                     {item}
                                                 </li>
                                             ))}
                                         </ul>
                                     </div>
-                                    {enrichedService.additionalInfo && (
-                                        <div>
-                                            <h3 className="font-semibold mb-2">Additional Information</h3>
-                                            <p className="text-gray-700">{enrichedService.additionalInfo}</p>
-                                        </div>
-                                    )}
                                 </div>
                             </TabsContent>
                             <TabsContent value="reviews" className="mt-4">
                                 <div className="space-y-6">
-                                    {enrichedService.reviews.length > 0 ? (
-                                        enrichedService.reviews.map((review: any, i: number) => (
+                                    {enrichedService.approvedReviews.length > 0 ? (
+                                        enrichedService.approvedReviews.map((review: any, i: number) => (
                                             <div key={i} className="border-b pb-4 last:border-0">
                                                 <div className="flex items-center gap-2 mb-2">
                                                     <Avatar className="h-8 w-8">

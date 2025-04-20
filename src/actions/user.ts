@@ -266,3 +266,83 @@ export const handleuserupdate = async (userId: string, firstName: string, lastNa
         throw error;
     }
 };
+export async function getServices(userId: string) {
+    try {
+        const services = await db.service.findMany({
+            include: {
+                requests: {
+                    select: {
+                        id: true,
+                        status: true,
+                        Review: {
+                            where: { status: "true" },
+                            include: {
+                                serviceRequest: {
+                                    include: {
+                                        user: true,
+                                        service: true,
+                                        servicePartner: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        const enriched = await Promise.all(
+            services.map(async (service) => {
+                const allRequests = service.requests || [];
+
+                const approvedReviews = allRequests.flatMap((req) => req.Review);
+                const totalReviews = approvedReviews.length;
+                const totalRating = approvedReviews.reduce((sum, r) => sum + r.rating, 0);
+                const averageRating = totalReviews ? totalRating / totalReviews : 0;
+
+                const totalOrders = allRequests.length;
+                const completedOrders = allRequests.filter((r) => r.status === "completed").length;
+
+                // 🔁 Inline getServicePartnerServices logic
+                let partnerStatus: "approved" | "pending" | "rejected" | null = null;
+
+                const servicePartner = await db.servicePartner.findUnique({
+                    where: { userId },
+                });
+
+                if (servicePartner) {
+                    const partnerService = await db.servicePartnerService.findFirst({
+                        where: {
+                            servicePartnerId: servicePartner.id,
+                            serviceId: service.id,
+                        },
+                        include: {
+                            servicePartner: true,
+                            service: true,
+                        },
+                    });
+
+                    if (partnerService?.status === "approved") {
+                        partnerStatus = "approved";
+                    } else if (partnerService?.status === "pending") {
+                        partnerStatus = "pending";
+                    }
+                }
+
+                return {
+                    ...service,
+                    averageRating,
+                    totalOrders,
+                    completedOrders,
+                    approvedReviews,
+                    partnerStatus,
+                };
+            })
+        );
+
+        return { success: true, services: enriched };
+    } catch (error) {
+        console.error("Error fetching services:", error);
+        return { success: false, error: "Failed to fetch services." };
+    }
+}

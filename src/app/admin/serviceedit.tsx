@@ -103,7 +103,7 @@ export default function EditServiceForm({ onClose, service }: EditServiceFormPro
 
             const result = await updateService(service.id,formData); // Replace this with your edit handler
             if(result.success) {
-                const data = services.map(item => item.id === service.id ? result.service : item);
+                const data = services.map(item => item.id === service.id ? {...item,...result.service} : item);
                 setServices(data);
             }
             if (result.success) {

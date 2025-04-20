@@ -8,18 +8,6 @@ import { Input } from "@/src/components/ui/input";
 import { Plus } from "lucide-react";
 import ServiceForm from "@/src/components/other/registerservice"; // Import the ServiceForm component
 
-interface Service {
-  id: string;
-  serviceName: string;
-  description?: string;
-  category: string;
-  basePrice: number;
-  estimatedTime?: string;
-  rating?: number;
-  imageUrl?: string;
-  numberOfRequests: number;
-  includes: string;
-}
 
 export default function ServiceManagement() {
   const [searchQuery, setSearchQuery] = useState<string>("");

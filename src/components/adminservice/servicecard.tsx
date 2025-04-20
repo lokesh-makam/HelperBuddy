@@ -14,40 +14,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import ServiceForm from "@/src/app/admin/serviceedit";
 const ServiceCard: React.FC<any> = ({ service }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [reviews, setreviews] = useState<any>([]);
-    const [avgrating, setavgrating] = useState(0);
     const [display,setdisplay]=useState(true);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false); // State to control modal visibility
-
-    useEffect(() => {
-        async function getreviews() {
-            const reviews = await getReviewsByServiceId(service.id);
-            const data=reviews?.data?.filter((item: any) => item.status == "true");
-            const totalRating = data?.reduce((acc: number, review: any) => acc + review.rating, 0)||0;
-            const averageRating = totalRating / (data?.length||1);
-            if(reviews?.success){
-                setLoading(false);
-                setreviews(data);
-                setavgrating(averageRating);
-            }
-        }
-        getreviews();
-    }, []);
     const handleCloseModal = () => {
         setIsEditOpen(false); // Close the modal
     };
-    if(loading){
-        return <Loading/>
-    }
     const enrichedService = {
         ...service,
-        reviews: reviews,
-        rating: avgrating,
-        duration: service.duration,
-        availableDate: service.availableDate || "Today",
-        includes: service?.includes?.split(",") || ["Standard package", "Basic support", "One revision"]
     };
 
     const formatDate = (dateString: string) => {
@@ -97,9 +71,9 @@ const ServiceCard: React.FC<any> = ({ service }) => {
                     <div className="mb-2 flex items-center gap-2">
                         <div className="flex items-center">
                             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400"/>
-                            <span className="ml-1 text-sm font-medium text-gray-800">{enrichedService.rating}</span>
+                            <span className="ml-1 text-sm font-medium text-gray-800">{enrichedService.averageRating}</span>
                         </div>
-                        <span className="text-sm text-gray-500">({enrichedService.reviews.length} reviews)</span>
+                        <span className="text-sm text-gray-500">({enrichedService.approvedReviews.length} reviews)</span>
                     </div>
 
                     {/* Service Name */}
@@ -142,9 +116,9 @@ const ServiceCard: React.FC<any> = ({ service }) => {
                         <div className="flex flex-wrap items-center gap-4 mb-4">
                             <div className="flex items-center">
                                 <Star className="h-5 w-5 fill-yellow-400 text-yellow-400"/>
-                                <span className="ml-1 font-medium">{enrichedService.rating}</span>
+                                <span className="ml-1 font-medium">{enrichedService.averageRating}</span>
                             </div>
-                            <span className="text-gray-600">({enrichedService.reviews.length} reviews)</span>
+                            <span className="text-gray-600">({enrichedService.approvedReviews.length} reviews)</span>
                             <div className="flex items-center text-gray-600">
                                 <Clock className="h-4 w-4 mr-1"/>
                                 <span>{enrichedService.estimatedTime}</span>
@@ -174,25 +148,19 @@ const ServiceCard: React.FC<any> = ({ service }) => {
                                     <div>
                                         <h3 className="font-semibold mb-2">Includes</h3>
                                         <ul className="list-disc pl-5 space-y-1">
-                                            {enrichedService.includes.map((item: string, i: number) => (
+                                            {enrichedService.includes.split(',').map((item: string, i: number) => (
                                                 <li key={i} className="text-gray-700">
                                                     {item}
                                                 </li>
                                             ))}
                                         </ul>
                                     </div>
-                                    {enrichedService.additionalInfo && (
-                                        <div>
-                                            <h3 className="font-semibold mb-2">Additional Information</h3>
-                                            <p className="text-gray-700">{enrichedService.additionalInfo}</p>
-                                        </div>
-                                    )}
                                 </div>
                             </TabsContent>
                             <TabsContent value="reviews" className="mt-4">
                                 <div className="space-y-6">
-                                    {enrichedService.reviews.length > 0 ? (
-                                        enrichedService.reviews.map((review: any, i: number) => (
+                                    {enrichedService.approvedReviews.length > 0 ? (
+                                        enrichedService.approvedReviews.map((review: any, i: number) => (
                                             <div key={i} className="border-b pb-4 last:border-0">
                                                 <div className="flex items-center gap-2 mb-2">
                                                     <Avatar className="h-8 w-8">

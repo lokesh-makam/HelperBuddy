@@ -1,61 +1,20 @@
 import React, {useEffect, useState} from "react";
-import { Star, X, ShoppingCart, Clock, Calendar, CheckCircle } from "lucide-react";
-import { useBoundStore } from "@/src/store/store";
+import { Star, X, ShoppingCart, Clock, Calendar } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/src/components/ui/dialog";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/src/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
 
-import {getReviewsByServiceId} from "@/src/actions/admin";
-import Loading from "@/src/app/loading";
 import {MdOutlineHomeRepairService} from "react-icons/md";
-import {getServicePartnerServices} from "@/src/actions/servicepartnerservices";
 import {applyForService,removeService,withdrawApplication} from "@/src/actions/servicepartnerservices";
 import { toast } from "react-toastify";
 
-const ServiceCard: React.FC<any> = ({ service , user}) => {
+const ServiceCard: React.FC<any> = ({ service,user}) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [reviews, setreviews] = useState<any>([]);
-    const [avgrating, setavgrating] = useState(0);
-    const [status,setstatus]=useState('null');
-    useEffect(() => {
-        async function getreviews() {
-            const reviews = await getReviewsByServiceId(service.id);
-            const data=reviews?.data?.filter((item: any) => item.status == "true");
-            const totalRating = data?.reduce((acc: number, review: any) => acc + review.rating, 0)||0;
-            const averageRating = totalRating / (data?.length||1);
-            const servicepartnerservices=await getServicePartnerServices(user.id,service.id)
-            if(servicepartnerservices?.success){
-                console.log(servicepartnerservices?.data)
-              if(servicepartnerservices?.data?.status==="approved"){
-                  setstatus('approved');
-              }else if(servicepartnerservices?.data?.status==="pending"){
-                  setstatus('pending')
-              }else{
-                  console.log("fjrhnhbr")
-                  setstatus('rejected');
-              }
-            }
-            if(reviews?.success){
-                setLoading(false);
-                setreviews(data);
-                setavgrating(averageRating);
-            }
-            }
-        getreviews();
-    }, []);
-    if(loading){
-        return <Loading/>
-    }
+    const [status,setstatus]=useState(service.partnerStatus||"null");
     const enrichedService = {
-        ...service,
-        reviews: reviews,
-        rating: avgrating,
-        duration: service.duration,
-        availableDate: service.availableDate || "Today",
-        includes: service?.includes?.split(",") || ["Standard package", "Basic support", "One revision"]
+        ...service
     };
     const handleApplyService = async () => {
         const response = await applyForService(user.id, service.id);
@@ -106,9 +65,9 @@ const ServiceCard: React.FC<any> = ({ service , user}) => {
                     <div className="mb-2 flex items-center gap-2">
                         <div className="flex items-center">
                             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                            <span className="ml-1 text-sm font-medium text-gray-800">{enrichedService.rating}</span>
+                            <span className="ml-1 text-sm font-medium text-gray-800">{enrichedService.averageRating}</span>
                         </div>
-                        <span className="text-sm text-gray-500">({enrichedService.reviews.length} reviews)</span>
+                        <span className="text-sm text-gray-500">({enrichedService.approvedReviews.length} reviews)</span>
                     </div>
 
                     {/* Service Name */}
@@ -153,9 +112,9 @@ const ServiceCard: React.FC<any> = ({ service , user}) => {
                         <div className="flex flex-wrap items-center gap-4 mb-4">
                             <div className="flex items-center">
                                 <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                                <span className="ml-1 font-medium">{enrichedService.rating}</span>
+                                <span className="ml-1 font-medium">{enrichedService.averageRating}</span>
                             </div>
-                            <span className="text-gray-600">({enrichedService.reviews.length} reviews)</span>
+                            <span className="text-gray-600">({enrichedService.approvedReviews.length} reviews)</span>
                             <div className="flex items-center text-gray-600">
                                 <Clock className="h-4 w-4 mr-1" />
                                 <span>{enrichedService.estimatedTime}</span>
@@ -185,25 +144,19 @@ const ServiceCard: React.FC<any> = ({ service , user}) => {
                                     <div>
                                         <h3 className="font-semibold mb-2">Includes</h3>
                                         <ul className="list-disc pl-5 space-y-1">
-                                            {enrichedService.includes.map((item: string, i: number) => (
+                                            {enrichedService.includes.split(',').map((item: string, i: number) => (
                                                 <li key={i} className="text-gray-700">
                                                     {item}
                                                 </li>
                                             ))}
                                         </ul>
                                     </div>
-                                    {enrichedService.additionalInfo && (
-                                        <div>
-                                            <h3 className="font-semibold mb-2">Additional Information</h3>
-                                            <p className="text-gray-700">{enrichedService.additionalInfo}</p>
-                                        </div>
-                                    )}
                                 </div>
                             </TabsContent>
                             <TabsContent value="reviews" className="mt-4">
                                 <div className="space-y-6">
-                                    {enrichedService.reviews.length > 0 ? (
-                                        enrichedService.reviews.map((review: any, i: number) => (
+                                    {enrichedService.approvedReviews.length > 0 ? (
+                                        enrichedService.approvedReviews.map((review: any, i: number) => (
                                             <div key={i} className="border-b pb-4 last:border-0">
                                                 <div className="flex items-center gap-2 mb-2">
                                                     <Avatar className="h-8 w-8">

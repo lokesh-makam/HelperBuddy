@@ -1,17 +1,31 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-// ✅ Service Interface (from Prisma model)
 interface Service {
-  id: string;
-  name: string;
-  description?: string;
-  category: string;
-  basePrice: number;
-  estimatedTime?: string;
-  rating: number;
-  includes?: string;
-  imageUrl?: string;
+    id: string;
+    name: string;
+    description?: string;
+    category: string;
+    basePrice: number;
+    estimatedTime?: string;
+    includes?: string;
+    imageUrl?: string;
+    rating: number;
+    // Enriched fields
+    averageRating: number;
+    totalOrders: number;
+    completedOrders: number;
+    approvedReviews: {
+        id: string;
+        rating: number;
+        comment?: string;
+        serviceRequest: {
+            id: string;
+            user: any; // Replace with proper user type if needed
+            service: any;
+            servicePartner: any;
+        };
+    }[];
 }
 
 // ✅ Cart Item Interface

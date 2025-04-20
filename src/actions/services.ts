@@ -4,13 +4,58 @@ import  cloudinary  from "@/src/lib/cloudinary";
 
 export async function getServices() {
     try {
-        const services = await db.service.findMany();
-        return { success: true, services };
+        const services = await db.service.findMany({
+            include: {
+                requests: {
+                    select: {
+                        id: true,
+                        status: true,
+                        Review: {
+                            where: {
+                                status: "true",
+                            },
+                            include: {
+                                serviceRequest: {
+                                    include: {
+                                        user: true,
+                                        service: true,
+                                        servicePartner: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        const enriched = services.map((service) => {
+            const allRequests = service.requests || [];
+
+            const approvedReviews = allRequests.flatMap((req) => req.Review);
+            const totalReviews = approvedReviews.length;
+            const totalRating = approvedReviews.reduce((sum, r) => sum + r.rating, 0);
+            const averageRating = totalReviews ? totalRating / totalReviews : 0;
+
+            const totalOrders = allRequests.length;
+            const completedOrders = allRequests.filter((r) => r.status === "completed").length;
+
+            return {
+                ...service,
+                averageRating,
+                totalOrders,
+                completedOrders,
+                approvedReviews,
+            };
+        });
+
+        return { success: true, services: enriched };
     } catch (error) {
         console.error("Error fetching services:", error);
         return { success: false, error: "Failed to fetch services." };
     }
 }
+
 export async function addService(formData: FormData) {
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
@@ -51,7 +96,14 @@ export async function addService(formData: FormData) {
             },
         });
 
-        return { success: "Service added successfully!", service };
+        return { success: "Service added successfully!", service:{
+                ...service,
+                averageRating: 0,
+                totalOrders: 0,
+                completedOrders: 0,
+                approvedReviews: [],
+            }
+        };
     } catch (error) {
         console.error("Error adding service:", error);
         return { error: "Failed to add service." };
